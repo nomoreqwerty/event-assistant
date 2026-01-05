@@ -35,7 +35,7 @@ PORT=3000
 
 1. Нажмите **Deploy the stack**
 2. Дождитесь завершения сборки
-3. Приложение будет доступно на порту **3000**
+3. Приложение будет доступно на порту **3033**
 
 ---
 
@@ -46,7 +46,7 @@ PORT=3000
 1. **Domain Names:** `event-assistant.nmq.su`
 2. **Scheme:** `http`
 3. **Forward Hostname/IP:** `event-assistant` (имя контейнера)
-4. **Forward Port:** `3000`
+4. **Forward Port:** `3033`
 5. **SSL:** Включить, выбрать Let's Encrypt
 
 ---

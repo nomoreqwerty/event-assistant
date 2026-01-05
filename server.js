@@ -140,6 +140,22 @@ app.post('/api/admin/login', (req, res) => {
 
   if (user && bcrypt.compareSync(password, user.password_hash)) {
     const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
+
+
+// API: Admin Dashboard Data
+app.get('/api/admin/data', verifyToken, (req, res) => {
+  try {
+    const submissions = db.prepare('SELECT * FROM submissions ORDER BY timestamp DESC').all();
+    console.log(`📊 Dashboard data requested: ${submissions.length} submissions`);
+    res.json({
+      emails: submissions
+    });
+  } catch (err) {
+    console.error('❌ Error fetching dashboard data:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
     console.log('✅ Login successful');
     res.json({ success: true, token });
   } else {
@@ -161,7 +177,7 @@ app.get('/api/submissions', verifyToken, (req, res) => {
 });
 
 // API: Export to CSV
-app.get('/api/export', verifyToken, (req, res) => {
+app.get('/api/admin/export', verifyToken, (req, res) => {
   try {
     const submissions = db.prepare('SELECT * FROM submissions ORDER BY timestamp DESC').all();
 

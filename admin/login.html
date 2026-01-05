@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - Event Assistant</title>
+    <title>Вход - Event Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,181 +15,105 @@
         }
 
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #8b5cf6;
-            --success: #10b981;
-            --danger: #ef4444;
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --secondary: #ec4899;
             --bg-dark: #0f172a;
-            --bg-card: #1e293b;
-            --text: #f1f5f9;
+            --text: #f8fafc;
             --text-muted: #94a3b8;
-            --border: #334155;
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Manrope', system-ui, -apple-system, sans-serif;
             background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
             color: var(--text);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
             overflow: hidden;
         }
 
-        /* Animated background */
-        .bg-animation {
-            position: absolute;
+        .bg-fixed {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden;
-            z-index: 0;
+            z-index: -1;
+            pointer-events: none;
         }
 
-        .bg-animation span {
+        .bg-blob {
             position: absolute;
-            display: block;
-            width: 20px;
-            height: 20px;
-            background: rgba(99, 102, 241, 0.1);
-            animation: float 25s linear infinite;
-            bottom: -150px;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 20s infinite alternate;
         }
 
-        .bg-animation span:nth-child(1) {
-            left: 25%;
-            width: 80px;
-            height: 80px;
-            animation-delay: 0s;
-            animation-duration: 20s;
+        .blob-1 {
+            top: -10%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: var(--primary);
         }
 
-        .bg-animation span:nth-child(2) {
-            left: 10%;
-            width: 40px;
-            height: 40px;
-            animation-delay: 2s;
-            animation-duration: 15s;
-        }
-
-        .bg-animation span:nth-child(3) {
-            left: 70%;
-            width: 60px;
-            height: 60px;
-            animation-delay: 4s;
-        }
-
-        .bg-animation span:nth-child(4) {
-            left: 40%;
-            width: 50px;
-            height: 50px;
-            animation-delay: 0s;
-            animation-duration: 18s;
-        }
-
-        .bg-animation span:nth-child(5) {
-            left: 65%;
-            width: 70px;
-            height: 70px;
-            animation-delay: 0s;
-        }
-
-        .bg-animation span:nth-child(6) {
-            left: 75%;
-            width: 90px;
-            height: 90px;
-            animation-delay: 3s;
-        }
-
-        .bg-animation span:nth-child(7) {
-            left: 35%;
-            width: 100px;
-            height: 100px;
-            animation-delay: 7s;
-        }
-
-        .bg-animation span:nth-child(8) {
-            left: 50%;
-            width: 55px;
-            height: 55px;
-            animation-delay: 15s;
-            animation-duration: 30s;
+        .blob-2 {
+            bottom: -10%;
+            right: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: var(--secondary);
+            animation-delay: -5s;
         }
 
         @keyframes float {
-            0% {
-                transform: translateY(0) rotate(0deg);
-                opacity: 1;
-                border-radius: 0;
-            }
-            100% {
-                transform: translateY(-1000px) rotate(720deg);
-                opacity: 0;
-                border-radius: 50%;
-            }
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(5%, 5%) scale(1.1); }
         }
 
-        .login-container {
-            position: relative;
-            z-index: 1;
-            background: rgba(30, 41, 59, 0.8);
+        .login-card {
+            background: rgba(30, 41, 59, 0.6);
             backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 3rem;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            border-radius: 24px;
             width: 100%;
-            max-width: 450px;
-            animation: slideIn 0.5s ease;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .logo {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
         }
 
         .logo-icon {
-            font-size: 4rem;
+            font-size: 3rem;
             margin-bottom: 1rem;
-            animation: bounce 2s infinite;
+            display: inline-block;
+            animation: bounce 2s infinite ease-in-out;
         }
 
         @keyframes bounce {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-10px);
-            }
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
-        .logo-text {
-            font-size: 2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        .logo h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--text) 0%, var(--text-muted) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: var(--text-muted);
-            margin-bottom: 2rem;
-            font-size: 0.95rem;
         }
 
         .form-group {
@@ -195,73 +122,73 @@
 
         label {
             display: block;
-            margin-bottom: 0.5rem;
             color: var(--text-muted);
-            font-weight: 500;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         input {
             width: 100%;
-            padding: 0.9rem 1rem;
-            background: rgba(51, 65, 85, 0.5);
-            border: 1px solid var(--border);
-            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
             color: var(--text);
             font-size: 1rem;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            font-family: inherit;
         }
 
         input:focus {
             outline: none;
             border-color: var(--primary);
-            background: rgba(51, 65, 85, 0.7);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+            background: rgba(15, 23, 42, 0.8);
         }
 
-        .btn-login {
+        .btn {
             width: 100%;
             padding: 1rem;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            transition: all 0.2s ease;
             margin-top: 1rem;
+            font-family: inherit;
         }
 
-        .btn-login:hover {
+        .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+            box-shadow: 0 10px 20px -10px rgba(139, 92, 246, 0.5);
         }
 
-        .btn-login:active {
+        .btn:active {
             transform: translateY(0);
         }
 
-        .error-message {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid var(--danger);
-            color: var(--danger);
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
             padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
             display: none;
-            animation: shake 0.5s ease;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
-        .error-message.show {
-            display: block;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .footer {
@@ -269,66 +196,66 @@
             margin-top: 2rem;
             color: var(--text-muted);
             font-size: 0.85rem;
-        }
-
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 2rem 1.5rem;
-                margin: 1rem;
-            }
-
-            .logo-text {
-                font-size: 1.5rem;
-            }
+            opacity: 0.6;
         }
     </style>
 </head>
 <body>
-    <div class="bg-animation">
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
+    <div class="bg-fixed">
+        <div class="bg-blob blob-1"></div>
+        <div class="bg-blob blob-2"></div>
     </div>
 
-    <div class="login-container">
+    <div class="login-card">
         <div class="logo">
-            <div class="logo-icon">🎫</div>
-            <div class="logo-text">Event Assistant</div>
+            <div class="logo-icon">🔐</div>
+            <h1>Admin Access</h1>
         </div>
-        <div class="subtitle">Панель администратора</div>
 
-        <div id="errorMessage" class="error-message"></div>
+        <div id="error" class="error">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="errorText"></span>
+        </div>
 
         <form id="loginForm">
             <div class="form-group">
-                <label for="username">👤 Имя пользователя</label>
-                <input type="text" id="username" name="username" required autocomplete="username">
+                <label for="username">Пользователь</label>
+                <input type="text" id="username" required autocomplete="username" placeholder="admin">
             </div>
             <div class="form-group">
-                <label for="password">🔒 Пароль</label>
-                <input type="password" id="password" name="password" required autocomplete="current-password">
+                <label for="password">Пароль</label>
+                <input type="password" id="password" required autocomplete="current-password" placeholder="••••••••">
             </div>
-            <button type="submit" class="btn-login">🚀 Войти</button>
+            <button type="submit" class="btn" id="submitBtn">Войти в систему</button>
         </form>
 
         <div class="footer">
-            © 2026 Event Assistant. Все права защищены.
+            Event Assistant Secure System
         </div>
     </div>
 
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        // Check if already logged in
+        if (localStorage.getItem('authToken')) {
+            window.location.href = '/admin/dashboard.html';
+        }
+
+        const form = document.getElementById('loginForm');
+        const errorDiv = document.getElementById('error');
+        const errorText = document.getElementById('errorText');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
+            // Reset UI
+            errorDiv.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Проверка...';
+
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('errorMessage');
-            
+
             try {
                 const response = await fetch('/api/admin/login', {
                     method: 'POST',
@@ -337,33 +264,41 @@
                     },
                     body: JSON.stringify({ username, password })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success) {
                     localStorage.setItem('authToken', data.token);
                     window.location.href = '/admin/dashboard.html';
                 } else {
-                    errorDiv.textContent = '❌ ' + (data.message || 'Неверные учетные данные');
-                    errorDiv.classList.add('show');
-                    setTimeout(() => {
-                        errorDiv.classList.remove('show');
-                    }, 3000);
+                    throw new Error(data.message || 'Неверные данные');
                 }
             } catch (error) {
-                console.error('Login error:', error);
-                errorDiv.textContent = '❌ Ошибка при входе в систему';
-                errorDiv.classList.add('show');
-                setTimeout(() => {
-                    errorDiv.classList.remove('show');
-                }, 3000);
+                errorText.textContent = error.message === 'Failed to fetch' 
+                    ? 'Ошибка подключения к серверу' 
+                    : (error.message || 'Ошибка авторизации');
+                errorDiv.style.display = 'flex';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Войти в систему';
+
+                // Shake animation
+                const card = document.querySelector('.login-card');
+                card.style.animation = 'none';
+                card.offsetHeight; // force reflow
+                card.style.animation = 'shake 0.5s ease';
             }
         });
 
-        // Check if already logged in
-        if (localStorage.getItem('authToken')) {
-            window.location.href = '/admin/dashboard.html';
-        }
+        // Add shake animation style
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-10px); }
+                75% { transform: translateX(10px); }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>

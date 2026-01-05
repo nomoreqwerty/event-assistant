@@ -4,7 +4,6 @@ services:
   event-assistant:
     build: .
     container_name: event-assistant
-    image: event-assistant:v2
     restart: unless-stopped
     ports:
       - "3033:3000"

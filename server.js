@@ -194,14 +194,14 @@ app.get('/health', (req, res) => {
 
 app.listen(PORT, '0.0.0.0', () => {
   const submissionCount = db.prepare('SELECT COUNT(*) as count FROM submissions').get().count;
-  console.log('
-' + '='.repeat(50));
+  console.log('');
+  console.log('==================================================');
   console.log('🚀 Event Assistant Server Started');
-  console.log('='.repeat(50));
-  console.log(`📍 Port: ${PORT}`);
-  console.log(`📊 Submissions in database: ${submissionCount}`);
-  console.log(`🔐 Admin panel: http://localhost:${PORT}/admin/login.html`);
-  console.log(`🏠 Landing page: http://localhost:${PORT}`);
-  console.log('='.repeat(50) + '
-');
+  console.log('==================================================');
+  console.log('📍 Port: ' + PORT);
+  console.log('📊 Submissions in database: ' + submissionCount);
+  console.log('🔐 Admin panel: http://localhost:' + PORT + '/admin/login.html');
+  console.log('🏠 Landing page: http://localhost:' + PORT);
+  console.log('==================================================');
+  console.log('');
 });

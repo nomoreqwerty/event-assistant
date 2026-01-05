@@ -142,14 +142,7 @@ app.post('/api/admin/login', (req, res) => {
     const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
 
 
-// API: Admin Dashboard Data
-app.get('/api/admin/data', verifyToken, (req, res) => {
-  try {
-    const submissions = db.prepare('SELECT * FROM submissions ORDER BY timestamp DESC').all();
-    console.log(`📊 Dashboard data requested: ${submissions.length} submissions`);
-    res.json({
-      emails: submissions
-    });
+
   } catch (err) {
     console.error('❌ Error fetching dashboard data:', err);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -163,6 +156,15 @@ app.get('/api/admin/data', verifyToken, (req, res) => {
     res.status(401).json({ success: false, message: 'Invalid credentials' });
   }
 });
+
+// API: Admin Dashboard Data
+app.get('/api/admin/data', verifyToken, (req, res) => {
+  try {
+    const submissions = db.prepare('SELECT * FROM submissions ORDER BY timestamp DESC').all();
+    console.log(`📊 Dashboard data requested: ${submissions.length} submissions`);
+    res.json({
+      emails: submissions
+    });
 
 // API: Get submissions
 app.get('/api/submissions', verifyToken, (req, res) => {

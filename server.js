@@ -1,31 +1,25 @@
 const express = require('express');
-const session = require('express-session');
 const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const Database = require('better-sqlite3');
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'event-assistant-jwt-secret-' + Math.random();
 
 // Initialize database
 const db = new Database('./data/database.db');
 
 // Create tables
 db.exec(`
-  CREATE TABLE IF NOT EXISTS emails (
+  CREATE TABLE IF NOT EXISTS submissions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT NOT NULL UNIQUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS visits (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
     ip TEXT,
     user_agent TEXT,
-    referer TEXT,
-    visited_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
   CREATE TABLE IF NOT EXISTS admin_users (
@@ -35,171 +29,110 @@ db.exec(`
   );
 `);
 
-// Create default admin user (username: admin, password: admin123)
+// Create default admin user
 const adminExists = db.prepare('SELECT * FROM admin_users WHERE username = ?').get('admin');
 if (!adminExists) {
   const hash = bcrypt.hashSync('admin123', 10);
   db.prepare('INSERT INTO admin_users (username, password_hash) VALUES (?, ?)').run('admin', hash);
-  console.log('Default admin user created: admin / admin123');
+  console.log('✅ Default admin user created: admin / admin123');
 }
 
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.use(session({
-  secret: 'event-assistant-secret-key-' + Math.random(),
-  resave: false,
-  saveUninitialized: false,
-  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
-}));
-
-// Visit tracking middleware
-app.use((req, res, next) => {
-  if (!req.path.startsWith('/admin') && !req.path.startsWith('/api')) {
-    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    const userAgent = req.headers['user-agent'];
-    const referer = req.headers['referer'] || 'direct';
-    
-    db.prepare('INSERT INTO visits (ip, user_agent, referer) VALUES (?, ?, ?)').run(ip, userAgent, referer);
-  }
-  next();
-});
 
 // Serve static files
 app.use(express.static('public'));
+app.use('/admin', express.static('admin'));
+
+// JWT Auth Middleware
+function verifyToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'No token provided' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.userId = decoded.id;
+    next();
+  } catch (err) {
+    return res.status(401).json({ success: false, message: 'Invalid token' });
+  }
+}
 
 // API: Submit email
 app.post('/api/subscribe', (req, res) => {
   const { email } = req.body;
-  
+  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  const userAgent = req.headers['user-agent'] || 'Unknown';
+
   if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
     return res.status(400).json({ success: false, message: 'Invalid email' });
   }
-  
+
   try {
-    db.prepare('INSERT INTO emails (email) VALUES (?)').run(email);
-    res.json({ success: true, message: 'Email added successfully' });
+    db.prepare('INSERT INTO submissions (email, ip, user_agent) VALUES (?, ?, ?)').run(email, ip, userAgent);
+    res.json({ success: true, message: 'Email submitted successfully' });
   } catch (err) {
-    if (err.message.includes('UNIQUE')) {
-      res.json({ success: true, message: 'Email already registered' });
-    } else {
-      res.status(500).json({ success: false, message: 'Server error' });
-    }
+    console.error('Error inserting submission:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
-// Admin: Login page
-app.get('/admin', (req, res) => {
-  if (req.session.isAdmin) {
-    return res.redirect('/admin/dashboard');
-  }
-  res.sendFile(path.join(__dirname, 'admin', 'login.html'));
-});
-
-// Admin: Login POST
-app.post('/admin/login', (req, res) => {
+// API: Admin Login (JWT)
+app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
-  
+
   const user = db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
-  
+
   if (user && bcrypt.compareSync(password, user.password_hash)) {
-    req.session.isAdmin = true;
-    res.json({ success: true });
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
+    res.json({ success: true, token });
   } else {
     res.status(401).json({ success: false, message: 'Invalid credentials' });
   }
 });
 
-// Admin: Logout
-app.get('/admin/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/admin');
-});
-
-// Admin middleware
-function requireAdmin(req, res, next) {
-  if (req.session.isAdmin) {
-    next();
-  } else {
-    res.redirect('/admin');
+// API: Get submissions
+app.get('/api/submissions', verifyToken, (req, res) => {
+  try {
+    const submissions = db.prepare('SELECT * FROM submissions ORDER BY timestamp DESC').all();
+    res.json(submissions);
+  } catch (err) {
+    console.error('Error fetching submissions:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
-}
-
-// Admin: Dashboard
-app.get('/admin/dashboard', requireAdmin, (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin', 'dashboard.html'));
 });
 
-// Admin: Get stats
-app.get('/admin/api/stats', requireAdmin, (req, res) => {
-  const emailCount = db.prepare('SELECT COUNT(*) as count FROM emails').get().count;
-  const visitCount = db.prepare('SELECT COUNT(*) as count FROM visits').get().count;
-  const todayVisits = db.prepare("SELECT COUNT(*) as count FROM visits WHERE DATE(visited_at) = DATE('now')").get().count;
-  
-  res.json({
-    emailCount,
-    visitCount,
-    todayVisits
-  });
+// API: Export to CSV
+app.get('/api/export', verifyToken, (req, res) => {
+  try {
+    const submissions = db.prepare('SELECT * FROM submissions ORDER BY timestamp DESC').all();
+
+    let csv = 'ID,Email,IP,User Agent,Timestamp\n';
+
+    submissions.forEach(s => {
+      csv += `${s.id},"${s.email}","${s.ip}","${s.user_agent}","${s.timestamp}"\n`;
+    });
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="submissions-' + Date.now() + '.csv"');
+    res.send(csv);
+  } catch (err) {
+    console.error('Error exporting data:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
-// Admin: Get emails
-app.get('/admin/api/emails', requireAdmin, (req, res) => {
-  const emails = db.prepare('SELECT * FROM emails ORDER BY created_at DESC').all();
-  res.json(emails);
-});
-
-// Admin: Get visits
-app.get('/admin/api/visits', requireAdmin, (req, res) => {
-  const visits = db.prepare('SELECT * FROM visits ORDER BY visited_at DESC LIMIT 100').all();
-  res.json(visits);
-});
-
-// Admin: Export emails to TXT
-app.get('/admin/api/export/emails', requireAdmin, (req, res) => {
-  const emails = db.prepare('SELECT email, created_at FROM emails ORDER BY created_at DESC').all();
-  
-  let txt = 'EMAIL LIST - Event Sales Assistant\n';
-  txt += '='.repeat(50) + '\n\n';
-  
-  emails.forEach(e => {
-    txt += `${e.email} - ${e.created_at}\n`;
-  });
-  
-  txt += '\n' + '='.repeat(50) + '\n';
-  txt += `Total: ${emails.length} emails\n`;
-  txt += `Exported: ${new Date().toISOString()}\n`;
-  
-  res.setHeader('Content-Type', 'text/plain');
-  res.setHeader('Content-Disposition', 'attachment; filename="emails-' + Date.now() + '.txt"');
-  res.send(txt);
-});
-
-// Admin: Export visits to TXT
-app.get('/admin/api/export/visits', requireAdmin, (req, res) => {
-  const visits = db.prepare('SELECT * FROM visits ORDER BY visited_at DESC').all();
-  
-  let txt = 'VISIT STATISTICS - Event Sales Assistant\n';
-  txt += '='.repeat(50) + '\n\n';
-  
-  visits.forEach(v => {
-    txt += `IP: ${v.ip}\n`;
-    txt += `Time: ${v.visited_at}\n`;
-    txt += `User-Agent: ${v.user_agent}\n`;
-    txt += `Referer: ${v.referer}\n`;
-    txt += '-'.repeat(50) + '\n';
-  });
-  
-  txt += '\n' + '='.repeat(50) + '\n';
-  txt += `Total visits: ${visits.length}\n`;
-  txt += `Exported: ${new Date().toISOString()}\n`;
-  
-  res.setHeader('Content-Type', 'text/plain');
-  res.setHeader('Content-Disposition', 'attachment; filename="visits-' + Date.now() + '.txt"');
-  res.send(txt);
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📊 Admin panel: http://localhost:${PORT}/admin/login.html`);
 });

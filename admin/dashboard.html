@@ -3,286 +3,642 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Event Sales Assistant</title>
+    <title>Admin Dashboard - Event Assistant</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f5f5f5;
-            padding: 20px;
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
         }
-        
-        .header {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+            animation: slideDown 0.5s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .navbar-content {
+            max-width: 1400px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
-        h1 {
-            color: #333;
-            font-size: 24px;
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        
+
         .logout-btn {
-            padding: 10px 20px;
-            background: #f44336;
+            background: linear-gradient(135deg, var(--danger), #dc2626);
             color: white;
-            text-decoration: none;
+            border: none;
+            padding: 0.6rem 1.5rem;
             border-radius: 8px;
-            font-size: 14px;
-            transition: background 0.3s;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
         }
-        
+
         .logout-btn:hover {
-            background: #d32f2f;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(239, 68, 68, 0.4);
         }
-        
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
         }
-        
+
         .stat-card {
-            background: white;
-            padding: 25px;
+            background: var(--bg-card);
+            padding: 1.5rem;
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.5s ease;
+            position: relative;
+            overflow: hidden;
         }
-        
-        .stat-card h3 {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
         }
-        
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.2);
+            background: var(--bg-card-hover);
+        }
+
         .stat-value {
-            font-size: 36px;
-            font-weight: bold;
-            color: #667eea;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
         }
-        
-        .section {
-            background: white;
-            padding: 30px;
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .data-section {
+            background: var(--bg-card);
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+            padding: 2rem;
+            border: 1px solid var(--border);
+            animation: fadeInUp 0.6s ease;
+            margin-bottom: 2rem;
         }
-        
+
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
         }
-        
-        .section h2 {
-            font-size: 20px;
-            color: #333;
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
         }
-        
-        .export-btn {
-            padding: 10px 20px;
-            background: #4CAF50;
-            color: white;
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
-            text-decoration: none;
-            display: inline-block;
-            transition: background 0.3s;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        
-        .export-btn:hover {
-            background: #45a049;
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);
         }
-        
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+        }
+
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
         }
-        
+
+        thead {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
         th {
+            padding: 1rem;
             text-align: left;
-            padding: 12px;
-            background: #f5f5f5;
-            color: #666;
             font-weight: 600;
-            font-size: 14px;
-            border-bottom: 2px solid #e0e0e0;
+            color: var(--primary);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
         }
-        
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-card-hover);
+        }
+
         td {
-            padding: 12px;
-            border-bottom: 1px solid #f0f0f0;
-            color: #333;
-            font-size: 14px;
+            padding: 1rem;
+            color: var(--text);
         }
-        
-        tr:hover {
-            background: #fafafa;
+
+        .ip-link {
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #999;
+
+        .ip-link:hover {
+            color: var(--secondary);
+            text-decoration: underline;
         }
-        
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            max-width: 600px;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            animation: slideIn 0.3s ease;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: var(--danger);
+        }
+
+        .ip-info {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .info-row {
+            display: flex;
+            padding: 0.75rem;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--primary);
+            min-width: 120px;
+        }
+
+        .info-value {
+            color: var(--text);
+        }
+
         .loading {
             text-align: center;
-            padding: 40px;
-            color: #666;
+            padding: 2rem;
         }
-        
-        .timestamp {
-            color: #999;
-            font-size: 12px;
+
+        .spinner {
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            table {
+                font-size: 0.9rem;
+            }
+
+            th, td {
+                padding: 0.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>📊 Admin Dashboard</h1>
-        <a href="/admin/logout" class="logout-btn">Выйти</a>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">🎫 Event Assistant Admin</div>
+            <button class="logout-btn" onclick="logout()">🚪 Выход</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">📊 Всего заявок</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="todayCount">0</div>
+                <div class="stat-label">📅 Сегодня</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="uniqueIPs">0</div>
+                <div class="stat-label">🌍 Уникальных IP</div>
+            </div>
+        </div>
+
+        <div class="data-section">
+            <div class="section-header">
+                <h2 class="section-title">📋 Заявки</h2>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="loadData()">🔄 Обновить</button>
+                    <button class="btn btn-success" onclick="exportData()">📥 Экспорт CSV</button>
+                </div>
+            </div>
+            <div id="tableContainer"></div>
+        </div>
     </div>
-    
-    <div class="stats-grid">
-        <div class="stat-card">
-            <h3>📧 Всего Email</h3>
-            <div class="stat-value" id="emailCount">-</div>
-        </div>
-        <div class="stat-card">
-            <h3>👥 Всего визитов</h3>
-            <div class="stat-value" id="visitCount">-</div>
-        </div>
-        <div class="stat-card">
-            <h3>🔥 Сегодня визитов</h3>
-            <div class="stat-value" id="todayVisits">-</div>
+
+    <div id="ipModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🌐 IP Информация</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="ipInfoContainer"></div>
         </div>
     </div>
-    
-    <div class="section">
-        <div class="section-header">
-            <h2>📧 Список Email</h2>
-            <a href="/admin/api/export/emails" class="export-btn">📥 Экспорт в TXT</a>
-        </div>
-        <div id="emailsContainer" class="loading">Загрузка...</div>
-    </div>
-    
-    <div class="section">
-        <div class="section-header">
-            <h2>👥 Последние визиты (100)</h2>
-            <a href="/admin/api/export/visits" class="export-btn">📥 Экспорт в TXT</a>
-        </div>
-        <div id="visitsContainer" class="loading">Загрузка...</div>
-    </div>
-    
+
     <script>
-        // Load statistics
-        async function loadStats() {
+        async function loadData() {
             try {
-                const response = await fetch('/admin/api/stats');
+                const response = await fetch('/api/submissions');
                 const data = await response.json();
                 
-                document.getElementById('emailCount').textContent = data.emailCount;
-                document.getElementById('visitCount').textContent = data.visitCount;
-                document.getElementById('todayVisits').textContent = data.todayVisits;
+                // Update stats
+                document.getElementById('totalCount').textContent = data.length;
+                
+                const today = new Date().toISOString().split('T')[0];
+                const todaySubmissions = data.filter(s => s.timestamp.startsWith(today));
+                document.getElementById('todayCount').textContent = todaySubmissions.length;
+                
+                const uniqueIPs = new Set(data.map(s => s.ip));
+                document.getElementById('uniqueIPs').textContent = uniqueIPs.size;
+                
+                // Render table
+                renderTable(data);
             } catch (error) {
-                console.error('Error loading stats:', error);
+                console.error('Error loading data:', error);
             }
         }
-        
-        // Load emails
-        async function loadEmails() {
-            try {
-                const response = await fetch('/admin/api/emails');
-                const emails = await response.json();
-                
-                const container = document.getElementById('emailsContainer');
-                
-                if (emails.length === 0) {
-                    container.innerHTML = '<div class="empty-state">Пока нет подписок</div>';
-                    return;
-                }
-                
-                let html = '<table><thead><tr><th>#</th><th>Email</th><th>Дата регистрации</th></tr></thead><tbody>';
-                
-                emails.forEach((email, index) => {
-                    html += `
+
+        function renderTable(data) {
+            const container = document.getElementById('tableContainer');
+            
+            if (data.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>Пока нет заявок</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <table>
+                    <thead>
                         <tr>
-                            <td>${index + 1}</td>
-                            <td>${email.email}</td>
-                            <td class="timestamp">${new Date(email.created_at).toLocaleString('ru-RU')}</td>
+                            <th>📧 Email</th>
+                            <th>🌍 IP Адрес</th>
+                            <th>📱 User Agent</th>
+                            <th>🕐 Время</th>
                         </tr>
-                    `;
-                });
-                
-                html += '</tbody></table>';
-                container.innerHTML = html;
-            } catch (error) {
-                console.error('Error loading emails:', error);
-                document.getElementById('emailsContainer').innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
-            }
+                    </thead>
+                    <tbody>
+                        ${data.map(row => `
+                            <tr>
+                                <td>${row.email}</td>
+                                <td>
+                                    <a class="ip-link" onclick="showIPInfo('${row.ip}')">
+                                        ${row.ip} 🔍
+                                    </a>
+                                </td>
+                                <td>${row.user_agent.substring(0, 50)}...</td>
+                                <td>${new Date(row.timestamp).toLocaleString('ru-RU')}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
         }
-        
-        // Load visits
-        async function loadVisits() {
+
+        async function showIPInfo(ip) {
+            const modal = document.getElementById('ipModal');
+            const container = document.getElementById('ipInfoContainer');
+            
+            modal.style.display = 'block';
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Загрузка информации...</p>
+                </div>
+            `;
+            
             try {
-                const response = await fetch('/admin/api/visits');
-                const visits = await response.json();
+                const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query`);
+                const data = await response.json();
                 
-                const container = document.getElementById('visitsContainer');
-                
-                if (visits.length === 0) {
-                    container.innerHTML = '<div class="empty-state">Пока нет визитов</div>';
-                    return;
-                }
-                
-                let html = '<table><thead><tr><th>#</th><th>IP</th><th>Дата и время</th><th>Источник</th></tr></thead><tbody>';
-                
-                visits.forEach((visit, index) => {
-                    const referer = visit.referer === 'direct' ? 'Прямой переход' : visit.referer;
-                    html += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${visit.ip}</td>
-                            <td class="timestamp">${new Date(visit.visited_at).toLocaleString('ru-RU')}</td>
-                            <td class="timestamp">${referer}</td>
-                        </tr>
+                if (data.status === 'success') {
+                    container.innerHTML = `
+                        <div class="ip-info">
+                            <div class="info-row">
+                                <div class="info-label">IP Адрес:</div>
+                                <div class="info-value">${data.query}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Страна:</div>
+                                <div class="info-value">${data.country} (${data.countryCode})</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Регион:</div>
+                                <div class="info-value">${data.regionName}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Город:</div>
+                                <div class="info-value">${data.city}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Почтовый индекс:</div>
+                                <div class="info-value">${data.zip || 'N/A'}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Координаты:</div>
+                                <div class="info-value">${data.lat}, ${data.lon}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Часовой пояс:</div>
+                                <div class="info-value">${data.timezone}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">ISP:</div>
+                                <div class="info-value">${data.isp}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Организация:</div>
+                                <div class="info-value">${data.org}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">AS:</div>
+                                <div class="info-value">${data.as}</div>
+                            </div>
+                        </div>
                     `;
-                });
-                
-                html += '</tbody></table>';
-                container.innerHTML = html;
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <p>❌ Не удалось получить информацию об IP</p>
+                        </div>
+                    `;
+                }
             } catch (error) {
-                console.error('Error loading visits:', error);
-                document.getElementById('visitsContainer').innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>❌ Ошибка при загрузке данных</p>
+                    </div>
+                `;
             }
         }
-        
-        // Load all data on page load
-        loadStats();
-        loadEmails();
-        loadVisits();
-        
-        // Refresh stats every 30 seconds
-        setInterval(loadStats, 30000);
+
+        function closeModal() {
+            document.getElementById('ipModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('ipModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        async function exportData() {
+            try {
+                const response = await fetch('/api/export');
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `submissions_${new Date().toISOString()}.csv`;
+                a.click();
+            } catch (error) {
+                console.error('Error exporting data:', error);
+                alert('Ошибка при экспорте данных');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            window.location.href = '/admin/login.html';
+        }
+
+        // Check auth on load
+        if (!localStorage.getItem('authToken')) {
+            window.location.href = '/admin/login.html';
+        }
+
+        // Load data on page load
+        loadData();
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadData, 30000);
     </script>
 </body>
 </html>

@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event Sales Assistant — из заметок в готовое КП</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- GSAP -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ["Manrope", "sans-serif"] },
+          colors: {
+            // Базовая палитра (глубокий серый, не черный)
+            bg: "#0A0A0C",
+            surface: "#131316",
+            surfaceHighlight: "#1C1C21",
+            border: "#2A2A30",
+
+            // Акцент (Лайм, но чуть теплее для "дороговизны")
+            accent: "#CCFF00",
+            accentDim: "rgba(204,255,0,0.1)",
+
+            // Текст
+            txt: "#EDEDED",
+            txtDim: "#888890"
+          },
+          boxShadow: {
+            // Эффект глубины (Sajid's technique)
+            'depth-sm': '0 1px 2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)',
+            'depth-card': '0 8px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.07)',
+            'depth-btn': '0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -2px 0 rgba(0,0,0,0.1)',
+            'depth-input': 'inset 0 2px 4px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.05)',
+            'glow-accent': '0 0 20px rgba(204,255,0,0.15)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #0A0A0C;
+      color: #EDEDED;
+      overflow-x: hidden;
+    }
+
+    /* Скроллбар */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0A0A0C;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #2A2A30;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3A3A40;
+    }
+
+    /* Шум для текстуры */
+    .texture {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* Анимации */
+    .card-hover {
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      border-color: rgba(204, 255, 0, 0.3);
+    }
+
+    /* Блик */
+    /* Update your existing .shine-btn style with this */
+    .shine-btn {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      z-index: 1;
+    }
+
+    /* The shine effect element */
+    .shine-btn::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -150%;
+      width: 150%;
+      height: 100%;
+      background: linear-gradient(90deg,
+          transparent,
+          rgba(255, 255, 255, 0.4),
+          transparent);
+      transform: skewX(-20deg);
+      transition: none;
+      /* Reset transition for manual animation */
+    }
+
+    /* Trigger animation on hover */
+    .shine-btn:hover::after {
+      animation: shine-anim 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Hover lift effect */
+    .shine-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px -5px rgba(204, 255, 0, 0.4);
+      /* Your accent color shadow */
+    }
+
+    /* Click press effect */
+    .shine-btn:active {
+      transform: translateY(1px);
+    }
+
+    /* Define the animation keyframes */
+    @keyframes shine-anim {
+      0% {
+        left: -150%;
+        opacity: 0;
+      }
+
+      20% {
+        opacity: 1;
+      }
+
+      100% {
+        left: 150%;
+        opacity: 0;
+      }
+    }
+
+    /* Градиент текста */
+    .text-grad {
+      background: linear-gradient(180deg, #FFFFFF 0%, #A0A0A0 100%);
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Continuous 115-degree Gradient Flow */
+    @keyframes flowContinuous {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      100% {
+        background-position: 200% 50%;
+      }
+    }
+
+    /* Star Twinkle Animation */
+    @keyframes starTwinkle {
+      0% {
+        opacity: 0;
+        transform: scale(0.5) rotate(0deg);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.2) rotate(45deg);
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(0.5) rotate(90deg);
+      }
+    }
+
+    .magical-text {
+      position: relative;
+      display: inline-block;
+
+      /* Angled gradient that loops seamlessly */
+      background: linear-gradient(115deg,
+          #3b82f6 0%,
+          /* Blue */
+          #8b5cf6 25%,
+          /* Violet */
+          #ec4899 50%,
+          /* Pink */
+          #8b5cf6 75%,
+          /* Violet */
+          #3b82f6 100%
+          /* Blue - must match start for seamless loop */
+        );
+      background-size: 200% auto;
+      /* Large width for smooth flow */
+
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+
+      /* Linear infinite animation */
+      animation: flowContinuous 3s linear infinite;
+
+      /* Glow */
+      filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.6));
+    }
+
+    /* Base style for the 4-pointed SVG star */
+    .magical-star {
+      position: absolute;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5L12 0Z' /%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-size: contain;
+      pointer-events: none;
+      /* Ignore clicks */
+      z-index: 10;
+    }
+
+    /* Individual Star Positions & Timings */
+    .star-1 {
+      width: 14px;
+      height: 14px;
+      top: -25%;
+      left: -15%;
+      animation: starTwinkle 2s ease-in-out infinite;
+    }
+
+    .star-2 {
+      width: 10px;
+      height: 10px;
+      bottom: -10%;
+      right: -20%;
+      animation: starTwinkle 2.5s ease-in-out infinite 0.5s;
+    }
+
+    .star-3 {
+      width: 8px;
+      height: 8px;
+      top: -10%;
+      right: 40%;
+      animation: starTwinkle 3s ease-in-out infinite 1.2s;
+    }
+
+    .star-4 {
+      width: 12px;
+      height: 12px;
+      bottom: 20%;
+      left: -20%;
+      animation: starTwinkle 2.2s ease-in-out infinite 0.8s;
+    }
+  </style>
+</head>
+
+<body class="antialiased">
+  <div class="texture"></div>
+
+  <!-- Header -->
+  <header class="fixed top-0 w-full z-50 border-b border-white/5 bg-[#0A0A0C]/80 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- Логотип (чистый SVG без фона) -->
+        <div class="w-10 h-10 flex items-center justify-center group cursor-pointer">
+          <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"
+            class="group-hover:scale-105 transition-transform duration-500">
+            <defs>
+              <filter id="glow_strong" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
+              </filter>
+            </defs>
+
+            <g transform="translate(0, 5)">
+              <!-- Top Face (Lighter Grey) -->
+              <path d="M50,50 L29.2,38 L50,26 L70.8,38 Z" fill="#3E3E42" stroke="#000" stroke-width="0.5" />
+
+              <!-- Left Face (Darker Grey) -->
+              <path d="M50,50 L29.2,38 L29.2,62 L50,74 Z" fill="#2D2D30" stroke="#000" stroke-width="0.5" />
+
+              <!-- Right Face (Darkest Grey/Black) -->
+              <path d="M50,50 L70.8,38 L70.8,62 L50,74 Z" fill="#1E1E1E" stroke="#000" stroke-width="0.5" />
+
+              <!-- HIGHLIGHTS (Yellow Lines) -->
+              <!-- 1. Top-Right Edge (Самый яркий луч) -->
+              <line x1="50" y1="50" x2="70.8" y2="38" stroke="#CCFF00" stroke-width="2.5" stroke-linecap="round" />
+              <line x1="50" y1="50" x2="70.8" y2="38" stroke="#CCFF00" stroke-width="5" stroke-opacity="0.5"
+                filter="url(#glow_strong)" stroke-linecap="round" />
+
+              <!-- 2. Vertical Front Edge (Вниз) -->
+              <line x1="50" y1="50" x2="50" y2="74" stroke="#CCFF00" stroke-width="1.5" stroke-linecap="round" />
+
+              <!-- 3. Bottom-Left Edge (Влево по низу) -->
+              <line x1="50" y1="74" x2="29.2" y2="62" stroke="#CCFF00" stroke-width="1.5" stroke-linecap="round" />
+            </g>
+          </svg>
+        </div>
+
+        <!-- Текстовая часть -->
+        <div class="flex flex-col justify-center -space-y-0.5">
+          <span class="font-bold tracking-tight text-sm text-txt">Event Sales</span>
+          <span class="text-[10px] tracking-widest text-txtDim uppercase">Assistant</span>
+        </div>
+      </div>
+
+      <button onclick="scrollToWaitlist()"
+        class="shine-btn text-xs font-bold bg-accent text-black px-4 py-2 rounded-lg shadow-depth-btn hover:brightness-110 transition">
+        Попробовать
+      </button>
+    </div>
+  </header>
+
+
+
+  <main class="pt-32 pb-0 px-6">
+    <!-- Hero Section -->
+    <div class="max-w-4xl mx-auto text-center reveal-stagger">
+      <h1 class="text-5xl md:text-7xl font-bold tracking-tight leading-[1.1] mb-6">
+        <span class="text-grad">Бриф — ТЗ — Смета</span><br>
+        <span class="text-txtDim">с помощью
+          <span class="magical-text">
+            ИИ
+            <!-- Stars -->
+            <span class="magical-star star-1"></span>
+            <span class="magical-star star-2"></span>
+            <span class="magical-star star-3"></span>
+            <span class="magical-star star-4"></span>
+          </span>
+        </span>
+      </h1>
+
+      <p class="text-lg text-txtDim max-w-2xl mx-auto mb-10 leading-relaxed">
+        Мы превращаем муторную работу по разбору заметок, голосовых и переписок в приятный рабочий процесс, делегируя
+        рутину ИИ
+      </p>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <button onclick="scrollToWaitlist()"
+          class="shine-btn w-full sm:w-auto px-8 py-4 bg-accent text-black font-bold rounded-xl shadow-glow-accent hover:scale-[1.02] transition-transform">
+          Получить доступ
+        </button>
+      </div>
+    </div>
+
+    <!-- Interactive Demo Section -->
+    <div class="max-w-6xl mx-auto mt-20 relative reveal-up">
+      <!-- Glow effect behind -->
+      <div class="absolute inset-0 bg-accent/5 blur-[100px] rounded-full transform scale-75"></div>
+
+      <div class="grid md:grid-cols-2 gap-8 relative z-10 h-[600px]">
+
+        <!-- Column 1: Chat Interface (Dark Stealth Mode) -->
+        <div
+          class="bg-surface border border-white/10 rounded-2xl shadow-depth-card overflow-hidden flex flex-col h-full relative">
+          <!-- Gradient overlay top -->
+          <div class="absolute top-0 w-full h-20 bg-gradient-to-b from-surface to-transparent z-10 pointer-events-none">
+          </div>
+
+          <!-- Chat Messages Area -->
+          <div id="chat-container" class="flex-1 p-6 overflow-y-auto space-y-6 pt-10 scroll-smooth">
+            <!-- Messages injected by JS -->
+          </div>
+
+          <!-- Input Placeholder -->
+          <div class="p-6 pt-0 z-10 bg-surface">
+            <div
+              class="flex items-center gap-3 p-4 rounded-xl bg-surfaceHighlight border border-white/5 text-txtDim/30 text-sm">
+              <div class="w-2 h-2 rounded-full bg-accent/50 animate-pulse"></div>
+              Переписка клиента с менеджером...
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2: Result Card -->
+        <div class="relative h-full flex flex-col justify-center">
+
+          <!-- AI Processing State (Initial) -->
+          <div id="ai-processing"
+            class="absolute inset-0 flex flex-col items-center justify-center text-center transition-all duration-700">
+
+            <h3 class="text-xl font-bold text-white mb-2">Ожидание данных...</h3>
+            <p class="text-sm text-txtDim max-w-xs">Когда соберете всю необходимую информацию — просто вставьте её в ИИ
+            </p>
+          </div>
+
+          <!-- Final Result Card (Hidden initially) -->
+          <div id="result-card"
+            class="bg-[#0F0F12] border border-white/10 rounded-2xl p-8 shadow-2xl transform scale-95 opacity-0 blur-sm transition-all duration-1000 ease-out absolute inset-0 overflow-y-auto custom-scrollbar">
+
+            <div class="flex justify-between items-start mb-6 border-b border-white/5 pb-4">
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-[10px] uppercase tracking-[0.2em] text-txtDim font-bold">Техническое Задание</span>
+                </div>
+                <h2 class="text-xl font-bold text-white">Конференция 2025</h2>
+              </div>
+              <div class="text-right">
+                <div class="text-xs text-txtDim">Дата</div>
+                <div class="text-sm font-medium text-white">05 Дек 2025</div>
+              </div>
+            </div>
+
+            <!-- Brief Content -->
+            <div class="space-y-6">
+              <!-- Section 1 -->
+              <div>
+                <h4 class="text-xs font-bold text-accent uppercase mb-3 flex items-center gap-2">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  Формат и Гости
+                </h4>
+                <div class="bg-surfaceHighlight rounded-lg p-4 border border-white/5 text-sm space-y-2">
+                  <div class="flex justify-between">
+                    <span class="text-txtDim">Тип:</span>
+                    <span class="text-white">Конференция</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-txtDim">Количество:</span>
+                    <span class="text-white">100–150 человек</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-txtDim">Рассадка:</span>
+                    <span class="text-white">Театральная</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 2 -->
+              <div>
+                <h4 class="text-xs font-bold text-accent uppercase mb-3 flex items-center gap-2">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Локация и Бюджет
+                </h4>
+                <div class="bg-surfaceHighlight rounded-lg p-4 border border-white/5 text-sm space-y-2">
+                  <div class="flex justify-between">
+                    <span class="text-txtDim">Локация:</span>
+                    <span class="text-white">Центр Москвы, у метро</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-txtDim">Бюджет:</span>
+                    <span class="text-white font-mono text-accent">до 1,000,000 ₽</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 3 -->
+              <div>
+                <h4 class="text-xs font-bold text-accent uppercase mb-3 flex items-center gap-2">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  Дополнительно
+                </h4>
+                <div class="flex flex-wrap gap-2">
+                  <span class="px-2 py-1 rounded bg-white/5 border border-white/10 text-xs text-txtDim">Фуршет</span>
+                  <span class="px-2 py-1 rounded bg-white/5 border border-white/10 text-xs text-txtDim">2
+                    кофе-брейка</span>
+                  <span class="px-2 py-1 rounded bg-white/5 border border-white/10 text-xs text-txtDim">Без
+                    алкоголя</span>
+                  <span class="px-2 py-1 rounded bg-white/5 border border-white/10 text-xs text-txtDim">ТО для презентации</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-8 pt-4 border-t border-white/5 flex gap-3">
+              <button
+                class="flex-1 py-3 bg-accent text-black font-bold rounded-lg text-xs hover:brightness-110 transition">
+                Скачать PDF
+              </button>
+              <button onclick="replayDemo()"
+                class="px-4 py-3 bg-surfaceHighlight border border-white/10 rounded-lg text-txtDim hover:text-white transition">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Script for Stealth Animation -->
+    <script>
+      const chatContainer = document.getElementById('chat-container');
+      const messages = [
+        { type: 'client', text: 'добрый день! нужно организовать конференцию на 5 декабря', delay: 0.5 },
+        { type: 'manager', text: 'Добрый день! Принято. На сколько человек рассчитываем и какой бюджет?', delay: 2.0 },
+        { type: 'client', text: 'планируем человек 100-150, бюджет до миллиона', delay: 4.0 },
+        { type: 'manager', text: 'Понял. Что по локации и питанию?', delay: 5.5 },
+        { type: 'client', text: 'в центре, рядом с метро. нужен будет фуршет и 2 кб. планируется еще презентация, поэтому важно наличие технического оснащения', delay: 7.5 }
+      ];
+
+      let tl = gsap.timeline();
+
+      function initDemo() {
+        chatContainer.innerHTML = '';
+
+        // Reset States
+        gsap.set("#ai-processing", { opacity: 1, scale: 1, filter: "blur(0px)" });
+        gsap.set("#result-card", { opacity: 0, scale: 0.95, filter: "blur(10px)", pointerEvents: "none" });
+
+        // Play Chat Sequence
+        messages.forEach((msg, index) => {
+          tl.call(() => {
+            addMessageToDom(msg);
+          }, null, msg.delay);
+        });
+
+        // Final Magic Transformation
+        tl.call(() => {
+          // 1. Hide Processing State
+          gsap.to("#ai-processing", {
+            opacity: 0,
+            scale: 0.8,
+            filter: "blur(10px)",
+            duration: 0.5
+          });
+
+          // 2. Show Result Card with "Magic" effect
+          gsap.to("#result-card", {
+            opacity: 1,
+            scale: 1,
+            filter: "blur(0px)",
+            pointerEvents: "all",
+            duration: 0.8,
+            ease: "power4.out",
+            delay: 0.2 // slight overlap
+          });
+
+        }, null, "+=1.5"); // Wait 1.5s after last message
+      }
+
+      function addMessageToDom(msg) {
+        const div = document.createElement('div');
+        const isClient = msg.type === 'client';
+
+        div.className = `flex ${isClient ? 'justify-start' : 'justify-end'} opacity-0 translate-y-2`;
+
+        // Stealth Colors: Client = Dark Surface, Manager = Slightly lighter/accented tint
+        // Client: bg-surfaceHighlight (Grey)
+        // Manager: bg-[#1A1A20] with slight border or just border
+
+        const bubbleStyle = isClient
+          ? 'bg-surfaceHighlight border border-white/5 text-txtDim'
+          : 'bg-white/5 border border-white/10 text-white';
+
+        const avatar = isClient
+          ? `<div class="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-white/10 flex-shrink-0"></div>`
+          : `<div class="w-6 h-6 rounded-full bg-accent/20 border border-accent/30 flex-shrink-0 flex items-center justify-center"><div class="w-2 h-2 bg-accent rounded-full"></div></div>`;
+
+        div.innerHTML = `
+              <div class="flex items-end gap-3 max-w-[85%] ${isClient ? 'flex-row' : 'flex-row-reverse'}">
+                 ${avatar}
+                 <div class="${bubbleStyle} px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm">
+                    ${msg.text}
+                 </div>
+              </div>
+            `;
+
+        chatContainer.appendChild(div);
+
+        // Animate
+        gsap.to(div, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" });
+
+        // Scroll
+        chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
+      }
+
+      function replayDemo() {
+        tl.kill();
+        tl = gsap.timeline();
+        initDemo();
+      }
+
+      ScrollTrigger.create({
+        trigger: "#chat-container",
+        start: "top 80%",
+        onEnter: () => initDemo(),
+        once: true
+      });
+    </script>
+
+
+    <!-- Features Bento Grid -->
+    <div id="features" class="max-w-6xl mx-auto mt-32">
+      <h2 class="text-2xl font-bold mb-10 text-center reveal-up">Возможности</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Card 1 -->
+        <div class="card-hover bg-surface border border-white/5 p-8 rounded-3xl shadow-depth-card reveal-up">
+          <div
+            class="w-10 h-10 rounded-xl bg-gradient-to-br from-surfaceHighlight to-surface border border-white/10 shadow-depth-sm flex items-center justify-center mb-6">
+            <span class="text-lg">🎙️</span>
+          </div>
+          <h3 class="text-lg font-bold mb-3">Голос в текст</h3>
+          <p class="text-sm text-txtDim leading-relaxed">
+            Кидайте голосовые прямо из WhatsApp/Telegram. Мы транскрибируем, уберем «эээ» и выделим суть
+          </p>
+        </div>
+
+        <!-- Card 2 (Wide) -->
+        <div
+          class="md:col-span-2 card-hover bg-surface border border-white/5 p-8 rounded-3xl shadow-depth-card relative overflow-hidden reveal-up">
+          <div class="relative z-10">
+            <div
+              class="w-10 h-10 rounded-xl bg-gradient-to-br from-surfaceHighlight to-surface border border-white/10 shadow-depth-sm flex items-center justify-center mb-6">
+              <span class="text-lg">⚡</span>
+            </div>
+            <h3 class="text-lg font-bold mb-3">Автоматическое ТЗ</h3>
+            <p class="text-sm text-txtDim leading-relaxed max-w-md">
+              ИИ поймет разрозненные заметки, голосовые и переписку, и подготовит готовое ТЗ для подрядчиков с первого
+              раза. Выгружайте и делитесь документами прямо на сайте
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="card-hover bg-surface border border-white/5 p-8 rounded-3xl shadow-depth-card reveal-up">
+          <div
+            class="w-10 h-10 rounded-xl bg-gradient-to-br from-surfaceHighlight to-surface border border-white/10 shadow-depth-sm flex items-center justify-center mb-6">
+            <span class="text-lg">🎨</span>
+          </div>
+          <h3 class="text-lg font-bold mb-3">Брендинг</h3>
+          <p class="text-sm text-txtDim leading-relaxed">
+            Ваш логотип, ваши шрифты, ваш стиль. Клиент никогда не поймет, что презентацию делал робот
+          </p>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="card-hover bg-surface border border-white/5 p-8 rounded-3xl shadow-depth-card reveal-up">
+          <div
+            class="w-10 h-10 rounded-xl bg-gradient-to-br from-surfaceHighlight to-surface border border-white/10 shadow-depth-sm flex items-center justify-center mb-6">
+            <span class="text-lg">📅</span>
+          </div>
+          <h3 class="text-lg font-bold mb-3">Тайминги</h3>
+          <p class="text-sm text-txtDim leading-relaxed">
+            Автоматическая генерация тайминга мероприятия на основе описания программы.
+          </p>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="card-hover bg-surface border border-white/5 p-8 rounded-3xl shadow-depth-card reveal-up">
+          <div
+            class="w-10 h-10 rounded-xl bg-gradient-to-br from-surfaceHighlight to-surface border border-white/10 shadow-depth-sm flex items-center justify-center mb-6">
+            <span class="text-lg">🤯</span>
+          </div>
+          <h3 class="text-lg font-bold mb-3">Большие и сложные запросы</h3>
+          <p class="text-sm text-txtDim leading-relaxed">
+            Мы точно обрабатываем не только простые запросы, но и сложные тендеры с документами на десятки страниц
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pain Points Section -->
+    <div id="pain-points" class="max-w-6xl mx-auto mt-32 px-6">
+      <div class="text-center mb-16 reveal-up">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Почему это больно делать вручную?</h2>
+        <p class="text-txtDim max-w-2xl mx-auto">
+          Как много времени тратят сейлзы на структуризацию информации и объяснения деталей подрядчикам?
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+
+        <!-- Pain 1: Chaos -->
+        <div
+          class="group reveal-up bg-surface border border-white/5 p-8 rounded-3xl hover:bg-surfaceHighlight transition-colors duration-300">
+          <div
+            class="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-white">Хаос в каналах</h3>
+          <p class="text-sm text-txtDim leading-relaxed">
+            Источников информации много, а структурировать нет времени. Клиент что-то сказал в WhatsApp, что-то по телефону, что-то на встрече. Как успеть, если надо уже обрабатывать другого?
+          </p>
+        </div>
+
+        <!-- Pain 2: Slow Speed -->
+        <div
+          class="group reveal-up bg-surface border border-white/5 p-8 rounded-3xl hover:bg-surfaceHighlight transition-colors duration-300 transition-delay-100">
+          <div
+            class="w-12 h-12 bg-orange-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-white">Долгое КП</h3>
+          <p class="text-sm text-txtDim leading-relaxed">
+            Пока вы только собираете ТЗ, чтобы передать подрядчикам, другие уже отправляют КП. Скорость решает сделки
+          </p>
+        </div>
+
+        <!-- Pain 3: Human Error -->
+        <div
+          class="group reveal-up bg-surface border border-white/5 p-8 rounded-3xl hover:bg-surfaceHighlight transition-colors duration-300 transition-delay-200">
+          <div
+            class="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-white">Забытые детали</h3>
+          <p class="text-sm text-txtDim leading-relaxed">
+            «А мы же просили ковер...» — одна упущенная деталь из переписки может стоить репутации всего агентства
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- Waitlist / CTA -->
+    <div id="waitlist" class="max-w-xl mx-auto mt-32 text-center reveal-up">
+      <h2 class="text-3xl font-bold mb-4">Доступ только для своих</h2>
+      <p class="text-txtDim mb-8">
+        Мы пока работаем в закрытом режиме. Введите почту, чтобы встать в очередь
+      </p>
+
+      <form onsubmit="joinWaitlist(event)" class="relative max-w-sm mx-auto">
+        <input type="email" id="email" required placeholder="name@agency.com"
+          class="w-full bg-surfaceHighlight border border-white/10 text-white px-5 py-4 rounded-xl shadow-depth-input focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition placeholder:text-txtDim/50">
+
+        <button type="submit"
+          class="absolute right-2 top-2 bottom-2 bg-accent text-black font-bold px-4 rounded-lg shadow-depth-btn hover:brightness-110 transition text-sm">
+          Вступить
+        </button>
+      </form>
+      <p class="text-[10px] text-txtDim mt-4">Мы не спамим. Честно.</p>
+    </div>
+
+    <footer class="mt-32 pt-10 border-t border-white/5 text-center pb-10">
+      <p class="text-xs text-txtDim">© 2026 Event Sales Assistant. Made for Managers in the Event Field</p>
+    </footer>
+
+  </main>
+
+  <!-- Success Modal -->
+  <div id="modal"
+    class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+    <div
+      class="bg-surface border border-white/10 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center transform scale-90 transition-transform duration-300">
+      <div class="w-16 h-16 flex items-center justify-center mx-auto mb-4 text-3xl">
+        🎉
+      </div>
+      <h3 class="text-xl font-bold mb-2">Вы в списке!</h3>
+      <p class="text-sm text-txtDim mb-6">Мы уже видим вашу заявку. Как только откроется место — пришлем письмо</p>
+      <button onclick="closeModal()"
+        class="w-full py-3 bg-surfaceHighlight border border-white/10 rounded-xl text-sm font-bold hover:bg-white/5 transition">
+        Ок, жду
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // GSAP Animations
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Stagger reveal for hero
+    gsap.from(".reveal-stagger > *", {
+      y: 30,
+      opacity: 0,
+      duration: 1,
+      stagger: 0.15,
+      ease: "power3.out",
+      delay: 0.2
+    });
+
+    // Reveal elements on scroll
+    gsap.utils.toArray(".reveal-up").forEach(elem => {
+      gsap.from(elem, {
+        scrollTrigger: {
+          trigger: elem,
+          start: "top 85%"
+        },
+        y: 40,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power3.out"
+      });
+    });
+
+    // Smooth scroll to anchor
+    function scrollToWaitlist() {
+      document.getElementById('waitlist').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Waitlist Logic
+    function joinWaitlist(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      if (email) {
+        // Show modal
+        const modal = document.getElementById('modal');
+        const modalContent = modal.querySelector('div');
+
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modalContent.classList.remove('scale-90');
+        modalContent.classList.add('scale-100');
+
+        e.target.reset();
+      }
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modal');
+      const modalContent = modal.querySelector('div');
+
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      modalContent.classList.remove('scale-100');
+      modalContent.classList.add('scale-90');
+    }
+  </script>
+</body>
+
+</html>
+<script>
+// Email submission functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Find all email input forms
+    const emailInputs = document.querySelectorAll('input[type="email"]');
+    
+    emailInputs.forEach(input => {
+        const form = input.closest('form') || input.parentElement;
+        const button = form.querySelector('button, input[type="submit"]');
+        
+        if (button) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                submitEmail(input.value, button);
+            });
+        }
+        
+        // Also handle Enter key
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitEmail(input.value, button);
+            }
+        });
+    });
+});
+
+function submitEmail(email, button) {
+    if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+        alert('Пожалуйста, введите корректный email');
+        return;
+    }
+    
+    // Show loading state
+    const originalText = button ? button.textContent : '';
+    if (button) button.textContent = 'Отправка...';
+    if (button) button.disabled = true;
+    
+    fetch('/api/subscribe', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message - find the success modal or create alert
+            const successModal = document.querySelector('.modal, [class*="success"]');
+            if (successModal) {
+                successModal.style.display = 'block';
+            } else {
+                alert('✅ Спасибо! Вы в списке ожидания.');
+            }
+        } else {
+            alert('Ошибка: ' + (data.message || 'Попробуйте позже'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка соединения. Попробуйте позже.');
+    })
+    .finally(() => {
+        if (button) {
+            button.textContent = originalText;
+            button.disabled = false;
+        }
+    });
+}
+</script>

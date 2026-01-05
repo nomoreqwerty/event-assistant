@@ -92,7 +92,7 @@ app.use('/admin', express.static('admin'));
 // JWT Auth Middleware
 function verifyToken(req, res, next) {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  const token = (authHeader && authHeader.split(' ')[1]) || req.query.token;
 
   if (!token) {
     return res.status(401).json({ success: false, message: 'No token provided' });

@@ -334,12 +334,28 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (res.status === 401 || res.status === 403) logout();
+                if (res.status === 401 || res.status === 403) {
+                     logout();
+                     return;
+                }
+
+                if (!res.ok) {
+                    const text = await res.text();
+                    throw new Error(`Server error ${res.status}: ${text.substring(0, 50)}`);
+                }
 
                 const data = await res.json();
                 renderDashboard(data);
             } catch (e) {
-                console.error(e);
+                console.error("Load Error:", e);
+                const tbody = document.getElementById('table-body');
+                if(tbody) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center">
+                        <div class="text-red-500 font-bold mb-2">❌ Ошибка загрузки данных</div>
+                        <div class="text-sm text-txtDim">${e.message}</div>
+                        <div class="mt-4 text-xs text-txtDim">Попробуйте выполнить git pull и перезапустить контейнер</div>
+                    </td></tr>`;
+                }
             }
         }
 

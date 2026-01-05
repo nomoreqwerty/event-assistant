@@ -7,11 +7,14 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
-    volumes:
-      - ./data:/app/data
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD_HASH=$2b$10$rZ5c6HqXH.vHqkV0sZqZfO7YvK0H3HqXH.vHqkV0sZqZfO7YvK0H3q
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
     networks:
       - event-network
 
@@ -21,3 +24,4 @@ networks:
 
 volumes:
   data:
+  logs:

@@ -161,6 +161,8 @@ app.get('/api/admin/data', verifyToken, (req, res) => {
   try {
     const submissions = db.prepare('SELECT * FROM submissions ORDER BY timestamp DESC').all();
     console.log(`📊 Dashboard data requested: ${submissions.length} submissions`);
+    // Self-healing check
+    db.exec(`CREATE TABLE IF NOT EXISTS visits (id INTEGER PRIMARY KEY AUTOINCREMENT, ip TEXT, user_agent TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)`);
     const totalVisits = db.prepare('SELECT COUNT(*) as count FROM visits').get().count;
     res.json({
       emails: submissions,
@@ -170,7 +172,7 @@ app.get('/api/admin/data', verifyToken, (req, res) => {
 
   } catch (err) {
     console.error('❌ Error fetching dashboard data:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error: ' + err.message });
   }
 });
 
@@ -182,7 +184,7 @@ app.get('/api/submissions', verifyToken, (req, res) => {
     res.json(submissions);
   } catch (err) {
     console.error('❌ Error fetching submissions:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error: ' + err.message });
   }
 });
 
@@ -204,7 +206,7 @@ app.get('/api/admin/export', verifyToken, (req, res) => {
     res.send(csv);
   } catch (err) {
     console.error('❌ Error exporting data:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error: ' + err.message });
   }
 });
 
@@ -249,6 +251,8 @@ app.get('/api/proxy/ip/:ip', verifyToken, (req, res) => {
 // API: Get Traffic Stats
 app.get('/api/admin/traffic', verifyToken, (req, res) => {
   try {
+    // Self-healing check
+    db.exec(`CREATE TABLE IF NOT EXISTS visits (id INTEGER PRIMARY KEY AUTOINCREMENT, ip TEXT, user_agent TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)`);
     const totalVisits = db.prepare('SELECT COUNT(*) as count FROM visits').get().count;
     const todayVisits = db.prepare("SELECT COUNT(*) as count FROM visits WHERE date(timestamp) = date('now')").get().count;
     const recentVisits = db.prepare('SELECT * FROM visits ORDER BY timestamp DESC LIMIT 50').all();
@@ -259,7 +263,7 @@ app.get('/api/admin/traffic', verifyToken, (req, res) => {
       recent: recentVisits
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error: ' + err.message });
   }
 });
 

@@ -400,10 +400,10 @@
         function animateValue(id, end) {
             const obj = document.getElementById(id);
             if (!obj) return;
-            const start = parseInt(obj.innerHTML.replace(/,/g, '')) || 0;
+            const start = parseInt(obj.innerHTML.replace(/\D/g, '')) || 0;
             if (start === end) return;
 
-            const duration = 1000;
+            const duration = 800;
             const range = end - start;
             const minSteps = 50;
             let stepTime = Math.abs(Math.floor(duration / range));

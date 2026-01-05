@@ -137,6 +137,7 @@ app.post('/api/subscribe', (req, res) => {
   }
 });
 
+
 // API: Admin Login (JWT)
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
@@ -147,15 +148,6 @@ app.post('/api/admin/login', (req, res) => {
 
   if (user && bcrypt.compareSync(password, user.password_hash)) {
     const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
-
-
-
-  } catch (err) {
-    console.error('❌ Error fetching dashboard data:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
-
     console.log('✅ Login successful');
     res.json({ success: true, token });
   } else {
@@ -174,6 +166,13 @@ app.get('/api/admin/data', verifyToken, (req, res) => {
       emails: submissions,
       visits: totalVisits
     });
+
+
+  } catch (err) {
+    console.error('❌ Error fetching dashboard data:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 // API: Get submissions
 app.get('/api/submissions', verifyToken, (req, res) => {

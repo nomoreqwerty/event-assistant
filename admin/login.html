@@ -3,255 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход - Event Assistant</title>
+    <title>Admin Login — Event Sales Assistant</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- GSAP -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ["Manrope", "sans-serif"] },
+                    colors: {
+                        bg: "#0A0A0C",
+                        surface: "#131316",
+                        surfaceHighlight: "#1C1C21",
+                        border: "#2A2A30",
+                        accent: "#CCFF00",
+                        accentDim: "rgba(204,255,0,0.1)",
+                        txt: "#EDEDED",
+                        txtDim: "#888890",
+                        danger: "#EF4444"
+                    },
+                    boxShadow: {
+                        'depth-card': '0 8px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.07)',
+                        'depth-input': 'inset 0 2px 4px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.05)',
+                        'glow-accent': '0 0 20px rgba(204,255,0,0.15)'
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #8b5cf6;
-            --primary-dark: #7c3aed;
-            --secondary: #ec4899;
-            --bg-dark: #0f172a;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-        }
-
         body {
-            font-family: 'Manrope', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background-color: #0A0A0C;
+            color: #EDEDED;
             overflow: hidden;
         }
 
-        .bg-fixed {
+        .texture {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
+            inset: 0;
             pointer-events: none;
+            opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            z-index: 0;
         }
 
-        .bg-blob {
+        .shine-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .shine-btn::after {
+            content: '';
             position: absolute;
-            filter: blur(80px);
-            opacity: 0.4;
-            animation: float 20s infinite alternate;
+            top: 0;
+            left: -150%;
+            width: 150%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transform: skewX(-20deg);
+            transition: none;
         }
 
-        .blob-1 {
-            top: -10%;
-            left: -10%;
-            width: 50vw;
-            height: 50vw;
-            background: var(--primary);
+        .shine-btn:hover::after {
+            animation: shine-anim 0.7s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .blob-2 {
-            bottom: -10%;
-            right: -10%;
-            width: 50vw;
-            height: 50vw;
-            background: var(--secondary);
-            animation-delay: -5s;
+        @keyframes shine-anim {
+            0% { left: -150%; opacity: 0; }
+            20% { opacity: 1; }
+            100% { left: 150%; opacity: 0; }
         }
 
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(5%, 5%) scale(1.1); }
+        /* Shake animation for errors */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
-
-        .login-card {
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 3rem;
-            border-radius: 24px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        .logo {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
-
-        .logo-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            display: inline-block;
-            animation: bounce 2s infinite ease-in-out;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .logo h1 {
-            font-size: 1.75rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--text) 0%, var(--text-muted) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        input {
-            width: 100%;
-            padding: 1rem 1.25rem;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            color: var(--text);
-            font-size: 1rem;
-            transition: all 0.2s ease;
-            font-family: inherit;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
-            background: rgba(15, 23, 42, 0.8);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-top: 1rem;
-            font-family: inherit;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px -10px rgba(139, 92, 246, 0.5);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-
-        .error {
-            background: rgba(239, 68, 68, 0.15);
-            color: #fca5a5;
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
-            display: none;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 2rem;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            opacity: 0.6;
-        }
+        .shake { animation: shake 0.4s ease-in-out; }
     </style>
 </head>
-<body>
-    <div class="bg-fixed">
-        <div class="bg-blob blob-1"></div>
-        <div class="bg-blob blob-2"></div>
+<body class="flex items-center justify-center min-h-screen relative">
+    <div class="texture"></div>
+
+    <!-- Background Glow -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent/5 blur-[100px] rounded-full"></div>
     </div>
 
-    <div class="login-card">
-        <div class="logo">
-            <div class="logo-icon">🔐</div>
-            <h1>Admin Access</h1>
+    <div class="relative z-10 w-full max-w-md p-6">
+        <div class="bg-surface border border-white/10 rounded-3xl p-8 shadow-depth-card backdrop-blur-xl">
+            <!-- Logo -->
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-surfaceHighlight border border-white/5 rounded-2xl shadow-depth-card">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 15V17M6 21H18C19.1046 21 20 20.1046 20 19V13C20 11.8954 19.1046 11 18 11H6C4.89543 11 4 11.8954 4 13V19C4 20.1046 4.89543 21 6 21ZM16 11V7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7V11H16Z" stroke="#CCFF00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight text-white">Admin Access</h1>
+                <p class="text-sm text-txtDim mt-2">Система управления заявками</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="hidden mb-6 bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                <span class="text-xs font-medium text-red-200" id="errorText">Ошибка входа</span>
+            </div>
+
+            <form id="loginForm" class="space-y-5">
+                <div class="space-y-2">
+                    <label class="text-[10px] uppercase tracking-widest text-txtDim font-bold pl-1">Username</label>
+                    <input type="text" id="username" required 
+                        class="w-full bg-surfaceHighlight border border-white/5 text-white px-5 py-4 rounded-xl shadow-depth-input focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition placeholder:text-txtDim/30"
+                        placeholder="Enter username">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] uppercase tracking-widest text-txtDim font-bold pl-1">Password</label>
+                    <input type="password" id="password" required 
+                        class="w-full bg-surfaceHighlight border border-white/5 text-white px-5 py-4 rounded-xl shadow-depth-input focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition placeholder:text-txtDim/30"
+                        placeholder="••••••••">
+                </div>
+
+                <button type="submit" id="submitBtn"
+                    class="shine-btn w-full bg-accent text-black font-bold py-4 rounded-xl shadow-glow-accent hover:scale-[1.02] active:scale-[0.98] transition-transform mt-4">
+                    Войти в систему
+                </button>
+            </form>
         </div>
 
-        <div id="error" class="error">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span id="errorText"></span>
-        </div>
-
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="username">Пользователь</label>
-                <input type="text" id="username" required autocomplete="username" placeholder="admin">
-            </div>
-            <div class="form-group">
-                <label for="password">Пароль</label>
-                <input type="password" id="password" required autocomplete="current-password" placeholder="••••••••">
-            </div>
-            <button type="submit" class="btn" id="submitBtn">Войти в систему</button>
-        </form>
-
-        <div class="footer">
-            Event Assistant Secure System
+        <div class="text-center mt-8">
+            <p class="text-[10px] text-txtDim uppercase tracking-widest opacity-50">Event Sales Assistant v1.0</p>
         </div>
     </div>
 
     <script>
-        // Check if already logged in
+        // Check auth
         if (localStorage.getItem('authToken')) {
             window.location.href = '/admin/dashboard.html';
         }
 
+        // Animation entrance
+        gsap.from(".bg-surface", {
+            y: 30,
+            opacity: 0,
+            duration: 1,
+            ease: "power3.out"
+        });
+
         const form = document.getElementById('loginForm');
-        const errorDiv = document.getElementById('error');
+        const errorDiv = document.getElementById('errorMessage');
         const errorText = document.getElementById('errorText');
         const submitBtn = document.getElementById('submitBtn');
+        const card = document.querySelector('.bg-surface');
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // Reset UI
-            errorDiv.style.display = 'none';
+            // Reset state
+            errorDiv.classList.add('hidden');
             submitBtn.disabled = true;
+            const originalText = submitBtn.textContent;
             submitBtn.textContent = 'Проверка...';
+            submitBtn.classList.add('opacity-70');
 
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
@@ -259,9 +185,7 @@
             try {
                 const response = await fetch('/api/admin/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
 
@@ -269,36 +193,29 @@
 
                 if (data.success) {
                     localStorage.setItem('authToken', data.token);
-                    window.location.href = '/admin/dashboard.html';
+
+                    // Success Animation
+                    gsap.to(card, {
+                        scale: 0.95,
+                        opacity: 0,
+                        duration: 0.3,
+                        onComplete: () => window.location.href = '/admin/dashboard.html'
+                    });
                 } else {
                     throw new Error(data.message || 'Неверные данные');
                 }
             } catch (error) {
-                errorText.textContent = error.message === 'Failed to fetch' 
-                    ? 'Ошибка подключения к серверу' 
-                    : (error.message || 'Ошибка авторизации');
-                errorDiv.style.display = 'flex';
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Войти в систему';
+                errorText.textContent = error.message === 'Failed to fetch' ? 'Нет соединения с сервером' : 'Неверный логин или пароль';
+                errorDiv.classList.remove('hidden');
 
-                // Shake animation
-                const card = document.querySelector('.login-card');
-                card.style.animation = 'none';
-                card.offsetHeight; // force reflow
-                card.style.animation = 'shake 0.5s ease';
+                // Shake effect
+                gsap.to(card, { x: -10, duration: 0.1, yoyo: true, repeat: 5 });
+
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText.trim();
+                submitBtn.classList.remove('opacity-70');
             }
         });
-
-        // Add shake animation style
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                25% { transform: translateX(-10px); }
-                75% { transform: translateX(10px); }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
 </body>
 </html>

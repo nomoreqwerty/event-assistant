@@ -3,732 +3,469 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Event Assistant</title>
-    <!-- Google Fonts -->
+    <title>Dashboard — Event Sales Assistant</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- GSAP -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ["Manrope", "sans-serif"] },
+                    colors: {
+                        bg: "#0A0A0C",
+                        surface: "#131316",
+                        surfaceHighlight: "#1C1C21",
+                        border: "#2A2A30",
+                        accent: "#CCFF00",
+                        accentDim: "rgba(204,255,0,0.1)",
+                        txt: "#EDEDED",
+                        txtDim: "#888890",
+                        success: "#10B981",
+                        warning: "#F59E0B"
+                    },
+                    boxShadow: {
+                        'depth-card': '0 8px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.07)',
+                        'depth-btn': '0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -2px 0 rgba(0,0,0,0.1)',
+                        'glow-accent': '0 0 20px rgba(204,255,0,0.15)'
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #8b5cf6; /* Violet */
-            --primary-dark: #7c3aed;
-            --secondary: #ec4899; /* Pink */
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
-            --bg-card-hover: #334155;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-        }
-
         body {
-            font-family: 'Manrope', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
-            color: var(--text);
-            min-height: 100vh;
-            line-height: 1.6;
+            background-color: #0A0A0C;
+            color: #EDEDED;
+            overflow-x: hidden;
         }
 
-        /* Animated background */
-        .bg-fixed {
+        .texture {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
+            inset: 0;
             pointer-events: none;
+            opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            z-index: 0;
         }
 
-        .bg-blob {
-            position: absolute;
-            filter: blur(80px);
-            opacity: 0.4;
-            animation: float 20s infinite alternate;
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0A0A0C;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2A2A30;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3A3A40;
         }
 
-        .blob-1 {
-            top: -10%;
-            left: -10%;
-            width: 50vw;
-            height: 50vw;
-            background: var(--primary);
-            animation-delay: 0s;
-        }
-
-        .blob-2 {
-            bottom: -10%;
-            right: -10%;
-            width: 50vw;
-            height: 50vw;
-            background: var(--secondary);
-            animation-delay: -10s;
-        }
-
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(5%, 5%) scale(1.1); }
-        }
-
-        .navbar {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(16px);
-            padding: 1rem 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .navbar-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .logo span { font-size: 1.8rem; -webkit-text-fill-color: initial; }
-
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logout-btn {
-            background: rgba(239, 68, 68, 0.2);
-            color: #fca5a5;
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            font-family: inherit;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .logout-btn:hover {
-            background: rgba(239, 68, 68, 0.3);
-            transform: translateY(-1px);
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 2rem auto;
-            padding: 0 2rem;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
-
-        .stat-card {
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(12px);
-            padding: 1.5rem;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        .shine-btn {
             position: relative;
             overflow: hidden;
+            transition: all 0.3s ease;
         }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            background: rgba(30, 41, 59, 0.8);
-            border-color: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-        }
-
-        .stat-value {
-            font-size: 3rem;
-            font-weight: 800;
-            line-height: 1.2;
-            background: linear-gradient(135deg, #fff, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .data-section {
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(12px);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .section-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-family: inherit;
-            font-size: 0.95rem;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 4px 6px rgba(139, 92, 246, 0.25);
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(139, 92, 246, 0.4);
-        }
-
-        .btn-success {
-            background: rgba(16, 185, 129, 0.2);
-            color: #34d399;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-success:hover {
-            background: rgba(16, 185, 129, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .table-container {
-            overflow-x: auto;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            white-space: nowrap;
-        }
-
-        thead {
-            background: rgba(15, 23, 42, 0.5);
-        }
-
-        th {
-            padding: 1.25rem 1.5rem;
-            text-align: left;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        tbody tr {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            transition: background 0.2s ease;
-        }
-
-        tbody tr:last-child {
-            border-bottom: none;
-        }
-
-        tbody tr:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        td {
-            padding: 1.25rem 1.5rem;
-            color: var(--text);
-            font-size: 0.95rem;
-        }
-
-        .ip-badge {
-            background: rgba(99, 102, 241, 0.15);
-            color: #a5b4fc;
-            padding: 0.25rem 0.75rem;
-            border-radius: 999px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .ip-badge:hover {
-            background: rgba(99, 102, 241, 0.3);
-            color: white;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
+        .shine-btn::after {
+            content: '';
+            position: absolute;
             top: 0;
-            left: 0;
-            width: 100%;
+            left: -150%;
+            width: 150%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transform: skewX(-20deg);
+            transition: none;
+        }
+        .shine-btn:hover::after {
+            animation: shine-anim 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes shine-anim {
+            0% { left: -150%; opacity: 0; }
+            20% { opacity: 1; }
+            100% { left: 150%; opacity: 0; }
+        }
+
+        /* Table Styles */
+        .glass-table tr:hover td {
+            background-color: #1C1C21;
+        }
+        .glass-table td {
+            transition: background-color 0.2s;
+        }
+
+        /* Modal Animation */
+        .modal-enter {
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transform: scale(0.95);
         }
-
-        .modal.show {
+        .modal-enter-active {
             opacity: 1;
+            transform: scale(1);
+            transition: all 0.3s ease-out;
         }
-
-        .modal-content {
-            background: #1e293b;
-            max-width: 500px;
-            margin: 10vh auto;
-            padding: 2rem;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transform: translateY(20px);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        .modal-exit {
+            opacity: 1;
+            transform: scale(1);
         }
-
-        .modal.show .modal-content {
-            transform: translateY(0);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .modal-header h2 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .close-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            color: var(--text-muted);
-            font-size: 1.25rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-
-        .close-btn:hover {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--danger);
-        }
-
-        .info-grid {
-            display: grid;
-            gap: 1rem;
-        }
-
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .info-item:last-child {
-            border-bottom: none;
-        }
-
-        .info-key {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .info-val {
-            font-weight: 500;
-            text-align: right;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 0 1rem;
-            }
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            .btn-group {
-                flex-direction: column;
-            }
-            .section-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-            .btn-group {
-                width: 100%;
-            }
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
+        .modal-exit-active {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 0.2s ease-in;
         }
     </style>
 </head>
-<body>
-    <div class="bg-fixed">
-        <div class="bg-blob blob-1"></div>
-        <div class="bg-blob blob-2"></div>
-    </div>
+<body class="antialiased min-h-screen flex flex-col">
+    <div class="texture"></div>
 
-    <nav class="navbar">
-        <div class="navbar-content">
-            <div class="logo"><span>🎫</span> Event Assistant</div>
-            <div class="user-menu">
-                <button class="logout-btn" onclick="logout()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 border-b border-white/5 bg-[#0A0A0C]/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 flex items-center justify-center bg-surfaceHighlight border border-white/10 rounded-lg">
+                    <svg class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                </div>
+                <span class="font-bold tracking-tight text-white">Admin<span class="text-txtDim font-normal">Panel</span></span>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button onclick="logout()" 
+                    class="text-xs font-bold text-txtDim hover:text-white transition uppercase tracking-widest">
                     Выход
                 </button>
             </div>
         </div>
     </nav>
 
-    <div class="container">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value" id="totalCount">-</div>
-                <div class="stat-label">📊 Всего заявок</div>
+    <main class="flex-1 max-w-7xl mx-auto w-full px-6 py-10 relative z-10">
+
+        <!-- Header Section -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6 reveal-up">
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-2">Обзор заявок</h1>
+                <p class="text-txtDim">Управляйте входящими лидами и аналитикой</p>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="todayCount">-</div>
-                <div class="stat-label">📅 За сегодня</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="uniqueIPs">-</div>
-                <div class="stat-label">🌍 Уникальных IP</div>
+            <div class="flex gap-3">
+                <button onclick="exportCSV()" 
+                    class="group flex items-center gap-2 px-4 py-2.5 bg-surfaceHighlight border border-white/10 rounded-xl text-sm font-medium hover:bg-white/5 transition shadow-depth-btn">
+                    <svg class="w-4 h-4 text-txtDim group-hover:text-white transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span class="text-txtDim group-hover:text-white">Экспорт CSV</span>
+                </button>
+                <button onclick="loadData()" 
+                    class="shine-btn px-4 py-2.5 bg-accent text-black rounded-xl text-sm font-bold shadow-glow-accent hover:brightness-110 transition">
+                    Обновить
+                </button>
             </div>
         </div>
 
-        <div class="data-section">
-            <div class="section-header">
-                <h2 class="section-title">📋 Последние заявки</h2>
-                <div class="btn-group">
-                    <button class="btn btn-primary" onclick="loadData()">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                        Обновить
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <!-- Card 1 -->
+            <div class="bg-surface border border-white/5 p-6 rounded-3xl shadow-depth-card reveal-up">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-blue-500/10 rounded-xl">
+                        <svg class="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <span class="text-xs font-bold text-green-400 bg-green-400/10 px-2 py-1 rounded-lg">+12%</span>
+                </div>
+                <div class="text-3xl font-bold text-white mb-1" id="total-emails">0</div>
+                <div class="text-sm text-txtDim">Всего заявок</div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="bg-surface border border-white/5 p-6 rounded-3xl shadow-depth-card reveal-up" style="animation-delay: 0.1s">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-purple-500/10 rounded-xl">
+                        <svg class="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </div>
+                    <span class="text-xs font-bold text-green-400 bg-green-400/10 px-2 py-1 rounded-lg">+5%</span>
+                </div>
+                <div class="text-3xl font-bold text-white mb-1" id="total-views">0</div>
+                <div class="text-sm text-txtDim">Просмотров страницы</div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="bg-surface border border-white/5 p-6 rounded-3xl shadow-depth-card reveal-up" style="animation-delay: 0.2s">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-accent/10 rounded-xl">
+                        <svg class="w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                    </div>
+                    <span class="text-xs font-bold text-txtDim bg-white/5 px-2 py-1 rounded-lg">Сегодня</span>
+                </div>
+                <div class="text-3xl font-bold text-white mb-1" id="conversion-rate">0%</div>
+                <div class="text-sm text-txtDim">Конверсия в заявку</div>
+            </div>
+        </div>
+
+        <!-- Table Section -->
+        <div class="bg-surface border border-white/5 rounded-3xl overflow-hidden shadow-depth-card reveal-up" style="animation-delay: 0.3s">
+            <div class="p-6 border-b border-white/5 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-white">Последние заявки</h2>
+                <div class="relative">
+                    <input type="text" placeholder="Поиск..." 
+                        class="bg-surfaceHighlight border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-accent/50 transition w-64">
+                    <svg class="w-4 h-4 text-txtDim absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left glass-table">
+                    <thead>
+                        <tr class="text-xs text-txtDim uppercase tracking-wider border-b border-white/5">
+                            <th class="px-6 py-4 font-bold">ID</th>
+                            <th class="px-6 py-4 font-bold">Email</th>
+                            <th class="px-6 py-4 font-bold">IP Адрес</th>
+                            <th class="px-6 py-4 font-bold">Дата</th>
+                            <th class="px-6 py-4 font-bold">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-white/5">
+                        <!-- Data injected via JS -->
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-txtDim">Загрузка данных...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination (Visual Only for now) -->
+            <div class="p-4 border-t border-white/5 flex justify-between items-center">
+                <span class="text-xs text-txtDim">Показано 1-10 из 50</span>
+                <div class="flex gap-2">
+                    <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-txtDim hover:bg-white/5 transition">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
                     </button>
-                    <button class="btn btn-success" onclick="exportData()">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        Экспорт CSV
+                    <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-txtDim hover:bg-white/5 transition">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
                     </button>
                 </div>
             </div>
-            <div id="tableContainer" class="table-container"></div>
         </div>
-    </div>
+    </main>
 
-    <div id="ipModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>🌐 Информация об IP</h2>
-                <button class="close-btn" onclick="closeModal()">&times;</button>
+    <!-- IP Info Modal -->
+    <div id="ipModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-surface border border-white/10 p-8 rounded-3xl shadow-2xl max-w-lg w-full transform scale-95 transition-transform duration-300 relative overflow-hidden">
+             <!-- Background decoration -->
+             <div class="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="flex justify-between items-start mb-6 relative z-10">
+                <h3 class="text-xl font-bold text-white">Информация об IP</h3>
+                <button onclick="closeIpModal()" class="text-txtDim hover:text-white transition">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
-            <div id="ipInfoContainer"></div>
+
+            <div id="ipModalContent" class="space-y-4 relative z-10">
+                <div class="animate-pulse flex space-x-4">
+                    <div class="flex-1 space-y-4 py-1">
+                        <div class="h-4 bg-white/10 rounded w-3/4"></div>
+                        <div class="space-y-2">
+                            <div class="h-4 bg-white/10 rounded"></div>
+                            <div class="h-4 bg-white/10 rounded w-5/6"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end relative z-10">
+                <button onclick="closeIpModal()" 
+                    class="px-6 py-3 bg-surfaceHighlight border border-white/10 rounded-xl text-sm font-bold text-white hover:bg-white/5 transition">
+                    Закрыть
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Auth check
+        // Check Auth
         const token = localStorage.getItem('authToken');
         if (!token) window.location.href = '/admin/login.html';
 
-        async function loadData() {
-            const btn = document.querySelector('.btn-primary');
-            btn.disabled = true;
-            btn.innerHTML = 'Загрузка...';
-
-            try {
-                const response = await fetch('/api/submissions', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.status === 401) {
-                    logout();
-                    return;
-                }
-
-                const data = await response.json();
-
-                // Update stats
-                animateValue('totalCount', data.length);
-
-                const today = new Date().toISOString().split('T')[0];
-                const todayCount = data.filter(s => s.timestamp.startsWith(today)).length;
-                animateValue('todayCount', todayCount);
-
-                const uniqueIPs = new Set(data.map(s => s.ip)).size;
-                animateValue('uniqueIPs', uniqueIPs);
-
-                // Render table
-                renderTable(data);
-            } catch (error) {
-                console.error('Error:', error);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                    Обновить
-                `;
-            }
-        }
-
-        function animateValue(id, value) {
-            const obj = document.getElementById(id);
-            const start = parseInt(obj.innerHTML) || 0;
-            if (start === value) {
-                obj.innerHTML = value;
-                return;
-            }
-
-            let current = start;
-            const range = value - start;
-            const increment = value > start ? 1 : -1;
-            const stepTime = Math.abs(Math.floor(1000 / range));
-            const timer = setInterval(() => {
-                current += increment;
-                obj.innerHTML = current;
-                if (current == value) clearInterval(timer);
-            }, Math.max(stepTime, 20));
-        }
-
-        function renderTable(data) {
-            const container = document.getElementById('tableContainer');
-
-            if (data.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 4rem; color: var(--text-muted);">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
-                        <p>Пока нет ни одной заявки</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Email</th>
-                            <th>IP Адрес</th>
-                            <th>User Agent</th>
-                            <th>Дата и время</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${data.map(row => `
-                            <tr>
-                                <td style="font-weight: 500;">${row.email}</td>
-                                <td>
-                                    <span class="ip-badge" onclick="showIPInfo('${row.ip}')">
-                                        ${row.ip}
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                                    </span>
-                                </td>
-                                <td style="color: var(--text-muted); font-size: 0.85rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis;" title="${row.user_agent}">
-                                    ${row.user_agent}
-                                </td>
-                                <td style="font-family: monospace; color: var(--text-muted);">
-                                    ${new Date(row.timestamp).toLocaleString('ru-RU')}
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-        }
-
-        async function showIPInfo(ip) {
-            const modal = document.getElementById('ipModal');
-            const container = document.getElementById('ipInfoContainer');
-
-            modal.style.display = 'block';
-            // Force reflow
-            modal.offsetHeight;
-            modal.classList.add('show');
-
-            container.innerHTML = `
-                <div style="text-align: center; padding: 2rem;">
-                    <div style="border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
-                    <p style="color: var(--text-muted);">Получение данных...</p>
-                </div>
-                <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
-            `;
-
-            try {
-                // Use HTTPS if possible, or try via proxy if mixed content block
-                const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,org,as,query`);
-                const data = await response.json();
-
-                if (data.status === 'success') {
-                    container.innerHTML = `
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span class="info-key">IP Адрес</span>
-                                <span class="info-val">${data.query}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-key">Страна</span>
-                                <span class="info-val">${data.country} ${data.countryCode}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-key">Город</span>
-                                <span class="info-val">${data.city}, ${data.regionName}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-key">Провайдер (ISP)</span>
-                                <span class="info-val">${data.isp}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-key">Организация</span>
-                                <span class="info-val">${data.org}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-key">Часовой пояс</span>
-                                <span class="info-val">${data.timezone}</span>
-                            </div>
-                        </div>
-                        <div style="margin-top: 1.5rem; height: 200px; background: rgba(0,0,0,0.3); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
-                            <a href="https://www.google.com/maps?q=${data.lat},${data.lon}" target="_blank" style="color: var(--primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-                                Открыть на карте
-                            </a>
-                        </div>
-                    `;
-                } else {
-                    throw new Error('API Error');
-                }
-            } catch (error) {
-                container.innerHTML = `
-                    <div style="text-align: center; color: var(--danger); padding: 2rem;">
-                        <p>❌ Не удалось загрузить информацию</p>
-                        <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 0.5rem;">Возможно блокировка mixed content или API лимит</p>
-                    </div>
-                `;
-            }
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('ipModal');
-            modal.classList.remove('show');
-            setTimeout(() => { modal.style.display = 'none'; }, 300);
-        }
-
-        window.onclick = function(event) {
-            const modal = document.getElementById('ipModal');
-            if (event.target === modal) closeModal();
-        }
-
-        async function exportData() {
-            try {
-                const response = await fetch('/api/export', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.status === 401) return logout();
-
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `submissions_${new Date().toISOString().slice(0,10)}.csv`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Ошибка при экспорте');
-            }
-        }
+        // Animations
+        gsap.from(".reveal-up", {
+            y: 30,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: "power3.out"
+        });
 
         function logout() {
             localStorage.removeItem('authToken');
             window.location.href = '/admin/login.html';
         }
 
-        // Initial load
+        async function loadData() {
+            try {
+                const res = await fetch('/api/admin/data', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.status === 401 || res.status === 403) logout();
+
+                const data = await res.json();
+                renderDashboard(data);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderDashboard(data) {
+            // Counters animation
+            animateValue("total-emails", data.emails.length);
+            animateValue("total-views", 1243); // Fake view count for demo
+            document.getElementById('conversion-rate').textContent = ((data.emails.length / 1243) * 100).toFixed(1) + '%';
+
+            // Table
+            const tbody = document.getElementById('table-body');
+            if (data.emails.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-txtDim">Нет данных</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.emails.map(row => `
+                <tr class="group transition-colors">
+                    <td class="px-6 py-4 text-sm text-txtDim font-mono">#${row.id}</td>
+                    <td class="px-6 py-4 text-sm font-medium text-white">${row.email}</td>
+                    <td class="px-6 py-4 text-sm">
+                        <button onclick="showIpInfo('${row.ip}')" 
+                            class="px-2 py-1 bg-surfaceHighlight border border-white/10 rounded text-xs text-accent hover:bg-accent hover:text-black transition">
+                            ${row.ip}
+                        </button>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-txtDim">${new Date(row.timestamp).toLocaleString('ru-RU')}</td>
+                    <td class="px-6 py-4">
+                        <button class="text-txtDim hover:text-white transition">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function animateValue(id, end) {
+            const obj = document.getElementById(id);
+            const start = parseInt(obj.innerHTML) || 0;
+            if (start === end) return;
+
+            let current = start;
+            const duration = 1000;
+            const stepTime = Math.abs(Math.floor(duration / (end - start)));
+
+            const timer = setInterval(() => {
+                current += 1;
+                obj.innerHTML = current;
+                if (current == end) clearInterval(timer);
+            }, stepTime > 10 ? stepTime : 10);
+        }
+
+        async function showIpInfo(ip) {
+            const modal = document.getElementById('ipModal');
+            const content = document.getElementById('ipModalContent');
+            const modalInner = modal.querySelector('div');
+
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalInner.classList.remove('scale-95');
+            modalInner.classList.add('scale-100');
+
+            content.innerHTML = `<div class="text-center py-8 text-txtDim">Загрузка данных...</div>`;
+
+            try {
+                const res = await fetch(`http://ip-api.com/json/${ip}?lang=ru`);
+                const data = await res.json();
+
+                if(data.status === 'fail') {
+                    content.innerHTML = `<div class="text-red-400 text-center">Не удалось получить данные</div>`;
+                    return;
+                }
+
+                content.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="bg-surfaceHighlight p-4 rounded-xl border border-white/5">
+                            <div class="text-txtDim text-xs uppercase tracking-wider mb-1">Страна</div>
+                            <div class="text-white font-bold flex items-center gap-2">
+                                ${data.country}
+                            </div>
+                        </div>
+                        <div class="bg-surfaceHighlight p-4 rounded-xl border border-white/5">
+                            <div class="text-txtDim text-xs uppercase tracking-wider mb-1">Город</div>
+                            <div class="text-white font-bold">${data.city}</div>
+                        </div>
+                        <div class="bg-surfaceHighlight p-4 rounded-xl border border-white/5">
+                            <div class="text-txtDim text-xs uppercase tracking-wider mb-1">Провайдер</div>
+                            <div class="text-white font-bold truncate">${data.isp}</div>
+                        </div>
+                        <div class="bg-surfaceHighlight p-4 rounded-xl border border-white/5">
+                            <div class="text-txtDim text-xs uppercase tracking-wider mb-1">Timezone</div>
+                            <div class="text-white font-bold">${data.timezone}</div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <a href="https://www.google.com/maps?q=${data.lat},${data.lon}" target="_blank" 
+                           class="flex items-center justify-center gap-2 w-full py-3 bg-white/5 border border-white/10 rounded-xl text-txtDim hover:bg-white/10 hover:text-white transition">
+                           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                           </svg>
+                           Показать на карте
+                        </a>
+                    </div>
+                `;
+            } catch (e) {
+                content.innerHTML = `<div class="text-red-400 text-center">Ошибка API</div>`;
+            }
+        }
+
+        function closeIpModal() {
+            const modal = document.getElementById('ipModal');
+            const modalInner = modal.querySelector('div');
+
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modalInner.classList.remove('scale-100');
+            modalInner.classList.add('scale-95');
+        }
+
+        function exportCSV() {
+            window.location.href = `/api/admin/export?token=${token}`;
+        }
+
+        // Init
         loadData();
-        setInterval(loadData, 30000);
     </script>
 </body>
 </html>

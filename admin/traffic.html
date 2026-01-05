@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard — Event Sales Assistant</title>
+    <title>Traffic — Event Sales Assistant</title>
 
     <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -143,8 +143,11 @@
                 <span class="font-bold tracking-tight text-white">Admin<span class="text-txtDim font-normal">Panel</span></span>
             </div>
 
+            
             <div class="flex items-center gap-4">
-                <button onclick="logout()" 
+                <a href="dashboard.html" class="text-xs font-bold text-txtDim hover:text-white transition uppercase tracking-widest mr-4">← Назад</a>
+                <button onclick="logout()"
+ 
                     class="text-xs font-bold text-txtDim hover:text-white transition uppercase tracking-widest">
                     Выход
                 </button>
@@ -157,17 +160,11 @@
         <!-- Header Section -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6 reveal-up">
             <div>
-                <h1 class="text-3xl font-bold text-white mb-2">Обзор заявок</h1>
-                <p class="text-txtDim">Управляйте входящими лидами и аналитикой</p>
+                <h1 class="text-3xl font-bold text-white mb-2">Статистика посещений</h1>
+                <p class="text-txtDim">Лог визитов (последние 50)</p>
             </div>
             <div class="flex gap-3">
-                <button onclick="exportCSV()" 
-                    class="group flex items-center gap-2 px-4 py-2.5 bg-surfaceHighlight border border-white/10 rounded-xl text-sm font-medium hover:bg-white/5 transition shadow-depth-btn">
-                    <svg class="w-4 h-4 text-txtDim group-hover:text-white transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    <span class="text-txtDim group-hover:text-white">Экспорт CSV</span>
-                </button>
+                
                 <button onclick="loadData()" 
                     class="shine-btn px-4 py-2.5 bg-accent text-black rounded-xl text-sm font-bold shadow-glow-accent hover:brightness-110 transition">
                     Обновить
@@ -241,10 +238,10 @@
                     <thead>
                         <tr class="text-xs text-txtDim uppercase tracking-wider border-b border-white/5">
                             <th class="px-6 py-4 font-bold">ID</th>
-                            <th class="px-6 py-4 font-bold">Email</th>
+                            <th class="px-6 py-4 font-bold">User Agent</th>
                             <th class="px-6 py-4 font-bold">IP Адрес</th>
                             <th class="px-6 py-4 font-bold">Дата</th>
-                            <th class="px-6 py-4 font-bold">Действия</th>
+                            
                         </tr>
                     </thead>
                     <tbody id="table-body" class="divide-y divide-white/5">
@@ -330,73 +327,68 @@
             window.location.href = '/admin/login.html';
         }
 
+        
+
+        
+
+        
+        
         async function loadData() {
             try {
-                const res = await fetch('/api/admin/data', {
+                const res = await fetch('/api/admin/traffic', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (res.status === 401 || res.status === 403) {
-                     logout();
-                     return;
-                }
-
-                if (!res.ok) {
-                    const text = await res.text();
-                    throw new Error(`Server error ${res.status}: ${text.substring(0, 50)}`);
-                }
-
+                if (res.status === 401) return logout();
                 const data = await res.json();
-                renderDashboard(data);
+                renderTraffic(data);
             } catch (e) {
-                console.error("Load Error:", e);
-                const tbody = document.getElementById('table-body');
-                if(tbody) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center">
-                        <div class="text-red-500 font-bold mb-2">❌ Ошибка загрузки данных</div>
-                        <div class="text-sm text-txtDim">${e.message}</div>
-                        <div class="mt-4 text-xs text-txtDim">Попробуйте выполнить git pull и перезапустить контейнер</div>
-                    </td></tr>`;
-                }
+                console.error(e);
             }
         }
 
-        function renderDashboard(data) {
-            // Counters animation
-            animateValue("total-emails", data.emails.length);
-            animateValue("total-views", data.visits || 0);
-            document.getElementById('conversion-rate').textContent = ((data.emails.length / 1243) * 100).toFixed(1) + '%';
+        function renderTraffic(data) {
+            // Update counters if elements exist
+            if(document.getElementById('total-views')) animateValue("total-views", data.total);
 
-            // Table
+            // Reuse email card for Today's visits
+            const card1 = document.getElementById('total-emails');
+            if(card1) {
+                 card1.id = 'today-views';
+                 card1.nextElementSibling.innerText = 'Визитов сегодня';
+                 // Hide +12% badge
+                 if(card1.previousElementSibling) card1.previousElementSibling.lastElementChild.style.display = 'none';
+                 animateValue('today-views', data.today);
+            }
+
+            // Hide conversion card
+            const card3 = document.getElementById('conversion-rate');
+            if(card3) card3.parentElement.parentElement.style.display = 'none';
+
             const tbody = document.getElementById('table-body');
-            if (data.emails.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-txtDim">Нет данных</td></tr>`;
+            if (!data.recent || data.recent.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-txtDim">Нет визитов</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = data.emails.map(row => `
+            tbody.innerHTML = data.recent.map(row => `
                 <tr class="group transition-colors">
                     <td class="px-6 py-4 text-sm text-txtDim font-mono">#${row.id}</td>
-                    <td class="px-6 py-4 text-sm font-medium text-white">${row.email}</td>
+                    <td class="px-6 py-4 text-sm font-medium text-white truncate max-w-xs" title="${row.user_agent}">
+                        ${row.user_agent ? row.user_agent.substring(0, 50) + (row.user_agent.length > 50 ? '...' : '') : 'Unknown'}
+                    </td>
                     <td class="px-6 py-4 text-sm">
-                        <button onclick="showIpInfo('${row.ip}')" 
+                        <button onclick="showIpInfo('${row.ip}')"
                             class="px-2 py-1 bg-surfaceHighlight border border-white/10 rounded text-xs text-accent hover:bg-accent hover:text-black transition">
                             ${row.ip}
                         </button>
                     </td>
                     <td class="px-6 py-4 text-sm text-txtDim">${new Date(row.timestamp).toLocaleString('ru-RU')}</td>
-                    <td class="px-6 py-4">
-                        <button class="text-txtDim hover:text-white transition">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                        </button>
-                    </td>
                 </tr>
             `).join('');
         }
 
-        
+
         function animateValue(id, end) {
             const obj = document.getElementById(id);
             if (!obj) return;

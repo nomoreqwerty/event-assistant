@@ -843,7 +843,13 @@
       modalContent.classList.add('scale-90');
     }
   </script>
+
+<script>
+// Simple Analytics
+fetch('/api/visit', { method: 'POST' }).catch(e => console.log('Analytics skipped'));
+</script>
 </body>
+
 
 </html>
 <script>

@@ -14,6 +14,13 @@ const db = new Database('./data/database.db');
 
 // Create tables
 db.exec(`
+  
+  CREATE TABLE IF NOT EXISTS visits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ip TEXT,
+    user_agent TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
   CREATE TABLE IF NOT EXISTS submissions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT NOT NULL,
@@ -162,8 +169,10 @@ app.get('/api/admin/data', verifyToken, (req, res) => {
   try {
     const submissions = db.prepare('SELECT * FROM submissions ORDER BY timestamp DESC').all();
     console.log(`📊 Dashboard data requested: ${submissions.length} submissions`);
+    const totalVisits = db.prepare('SELECT COUNT(*) as count FROM visits').get().count;
     res.json({
-      emails: submissions
+      emails: submissions,
+      visits: totalVisits
     });
 
 // API: Get submissions
@@ -199,6 +208,62 @@ app.get('/api/admin/export', verifyToken, (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
+
+// API: Track Visit
+app.post('/api/visit', (req, res) => {
+  const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || 'Unknown';
+  const userAgent = req.headers['user-agent'] || 'Unknown';
+
+  try {
+    db.prepare('INSERT INTO visits (ip, user_agent) VALUES (?, ?)').run(ip, userAgent);
+    res.json({ success: true });
+  } catch (err) {
+    // Fail silently for analytics
+    res.status(500).json({ success: false });
+  }
+});
+
+
+// API: IP Proxy (Fixes Mixed Content)
+const http = require('http');
+app.get('/api/proxy/ip/:ip', verifyToken, (req, res) => {
+  const ip = req.params.ip;
+  const url = `http://ip-api.com/json/${ip}?lang=ru`;
+
+  http.get(url, (apiRes) => {
+    let data = '';
+    apiRes.on('data', (chunk) => data += chunk);
+    apiRes.on('end', () => {
+      try {
+        res.json(JSON.parse(data));
+      } catch (e) {
+        res.status(500).json({ status: 'fail' });
+      }
+    });
+  }).on('error', (err) => {
+    res.status(500).json({ status: 'fail' });
+  });
+});
+
+
+// API: Get Traffic Stats
+app.get('/api/admin/traffic', verifyToken, (req, res) => {
+  try {
+    const totalVisits = db.prepare('SELECT COUNT(*) as count FROM visits').get().count;
+    const todayVisits = db.prepare("SELECT COUNT(*) as count FROM visits WHERE date(timestamp) = date('now')").get().count;
+    const recentVisits = db.prepare('SELECT * FROM visits ORDER BY timestamp DESC LIMIT 50').all();
+
+    res.json({
+      total: totalVisits,
+      today: todayVisits,
+      recent: recentVisits
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 
 // Health check
 app.get('/health', (req, res) => {

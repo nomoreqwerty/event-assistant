@@ -212,7 +212,7 @@ app.listen(PORT, '0.0.0.0', () => {
   const submissionCount = db.prepare('SELECT COUNT(*) as count FROM submissions').get().count;
   console.log('');
   console.log('==================================================');
-  console.log('🚀 Event Assistant Server Started');
+  console.log('🚀 Event Assistant Server v2.0 Started (Cache Bust)');
   console.log('==================================================');
   console.log('📍 Port: ' + PORT);
   console.log('📊 Submissions in database: ' + submissionCount);

@@ -1,7 +1,7 @@
 {
   "name": "event-assistant",
-  "version": "1.0.0",
-  "description": "Event Sales Assistant Landing Page",
+  "version": "2.0.0",
+  "description": "Cache busted version",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

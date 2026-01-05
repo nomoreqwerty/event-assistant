@@ -15,9 +15,6 @@ services:
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-      - ./server.js:/app/server.js
-      - ./admin:/app/admin
-      - ./public:/app/public
     networks:
       - event-network
 
